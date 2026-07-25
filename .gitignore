@@ -1,0 +1,26 @@
+# Build output
+*.dll
+*.pdb
+bin/
+obj/
+build/
+!scripts/tasks/build/
+!scripts/tasks/build/*.sh
+
+# Local environment
+.env
+
+# macOS Finder cache
+.DS_Store
+
+# IDE-local files
+.idea/
+.vs/
+
+# Unity project caches and local state
+ImplResourcePack.Unity/[Ll]ibrary/
+ImplResourcePack.Unity/[Tt]emp/
+ImplResourcePack.Unity/[Oo]bj/
+ImplResourcePack.Unity/[Ll]ogs/
+ImplResourcePack.Unity/[Uu]ser[Ss]ettings/
+ImplResourcePack.Unity/[Mm]emoryCaptures/

@@ -1,0 +1,9 @@
+{
+  "Id": "ImplResourcePack",
+  "DisplayName": "Impl Resource Pack",
+  "Author": "impl",
+  "Version": "0.1.0",
+  "AssemblyName": "ImplResourcePack.dll",
+  "EntryMethod": "ImplResourcePack.Main.Load"
+}
+
