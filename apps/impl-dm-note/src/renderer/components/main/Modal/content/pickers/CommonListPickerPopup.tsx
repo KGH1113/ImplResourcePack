@@ -239,7 +239,7 @@ export default function CommonListPickerPopup<T>({
     >
       <div
         ref={containerCallbackRef}
-        className={`flex flex-col p-[8px] gap-[8px] ${widthClass} bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30]`.trim()}
+        className={`dmn-picker-surface flex flex-col gap-[8px] p-[8px] ${widthClass}`.trim()}
       >
         <input
           type="text"

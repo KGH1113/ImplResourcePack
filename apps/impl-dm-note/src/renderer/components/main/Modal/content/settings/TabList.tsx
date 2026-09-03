@@ -7,6 +7,12 @@ import { useLenis } from '@hooks/useLenis';
 import Alert from '../dialogs/Alert.jsx';
 import TabNameModal from '../editors/TabNameModal';
 import type { KeyViewerKind } from '@src/types/key/keys';
+import ListPopup from '../../ListPopup';
+import { moveTabId, moveTabIdByOffset } from './tabOrder';
+import {
+  captureEditorHistorySnapshot,
+  pushEditorHistorySnapshot,
+} from '@stores/data/editorHistorySnapshot';
 
 interface TabListProps {
   viewerKind: KeyViewerKind;
@@ -30,6 +36,16 @@ const TabList = ({ viewerKind }: TabListProps) => {
 
   const [askDelete, setAskDelete] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
+  const [renameTabId, setRenameTabId] = useState<string | null>(null);
+  const [deleteTabId, setDeleteTabId] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    id: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [draftOrder, setDraftOrder] = useState<string[] | null>(null);
+  const draggingId = useRef<string | null>(null);
+  const dropCommitted = useRef(false);
   const [hasOverflow, setHasOverflow] = useState(false);
   const selectedButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -83,7 +99,21 @@ const TabList = ({ viewerKind }: TabListProps) => {
     : 0;
 
   const handleCreate = async (name: string) => {
+    const before = captureEditorHistorySnapshot();
     const result = await window.api.keys.tabs.create(viewerKind, name);
+    if (!result.error) pushEditorHistorySnapshot(before);
+    return result;
+  };
+
+  const handleRename = async (name: string) => {
+    if (!renameTabId) return { error: 'not-found' };
+    const before = captureEditorHistorySnapshot();
+    const result = await window.api.keys.tabs.rename(
+      viewerKind,
+      renameTabId,
+      name,
+    );
+    if (!result.error) pushEditorHistorySnapshot(before);
     return result;
   };
 
@@ -97,14 +127,41 @@ const TabList = ({ viewerKind }: TabListProps) => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (id: string) => {
     try {
-      const result = await window.api.keys.tabs.delete(selectedTabId);
+      const before = captureEditorHistorySnapshot();
+      const result = await window.api.keys.tabs.delete(id);
       if (!result?.success) {
         console.warn('Failed to delete custom tab', result?.error);
+      } else {
+        pushEditorHistorySnapshot(before);
       }
     } catch (error) {
       console.error('Failed to delete custom tab', error);
+    }
+  };
+
+  const displayTabs = [...tabs].reverse();
+  const displayedIds = displayTabs.map((tab) => tab.id);
+  const visibleOrder = draftOrder ?? displayedIds;
+  const orderedTabs = visibleOrder
+    .map((id) => displayTabs.find((tab) => tab.id === id))
+    .filter((tab): tab is (typeof displayTabs)[number] => Boolean(tab));
+
+  const commitOrder = async (orderedIds: string[]) => {
+    if (orderedIds.join('\0') === displayedIds.join('\0')) {
+      setDraftOrder(null);
+      return;
+    }
+    const before = captureEditorHistorySnapshot();
+    try {
+      const result = await window.api.keys.tabs.reorder(viewerKind, orderedIds);
+      if (result.error) throw new Error(result.error);
+      pushEditorHistorySnapshot(before);
+    } catch (error) {
+      console.error('Failed to reorder custom tabs', error);
+    } finally {
+      setDraftOrder(null);
     }
   };
 
@@ -140,24 +197,48 @@ const TabList = ({ viewerKind }: TabListProps) => {
                   : undefined
               }
             >
-              {[...tabs]
-                .slice()
-                .reverse()
-                .map((tab) => (
+              {orderedTabs.map((tab) => (
+                <div
+                  key={tab.id}
+                  className="flex w-full items-center gap-[3px]"
+                  onDragOver={(event) => {
+                    if (!draggingId.current) return;
+                    event.preventDefault();
+                    setDraftOrder((current) =>
+                      moveTabId(
+                        current ?? displayedIds,
+                        draggingId.current as string,
+                        tab.id,
+                      ),
+                    );
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    dropCommitted.current = true;
+                    void commitOrder(draftOrder ?? displayedIds);
+                  }}
+                >
                   <button
-                    key={tab.id}
                     ref={
                       selectedTabId === tab.id ? selectedButtonRef : undefined
                     }
                     type="button"
                     aria-current={selectedTabId === tab.id ? 'true' : undefined}
                     data-selected={selectedTabId === tab.id ? 'true' : 'false'}
-                    className={`relative w-full min-h-[24px] h-[24px] flex-shrink-0 flex items-center justify-center rounded-[7px] px-[24px] text-style-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus ${
+                    className={`relative min-w-0 flex-1 min-h-[24px] h-[24px] flex-shrink-0 flex items-center justify-center rounded-[7px] px-[24px] text-style-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus ${
                       selectedTabId === tab.id
                         ? 'bg-button-active text-[#FFFFFF] hover:bg-surfaceHover'
                         : 'text-[#DBDEE8] hover:bg-button-hover active:bg-button-active'
                     }`}
                     onClick={() => handleSelect(tab.id)}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      setContextMenu({
+                        id: tab.id,
+                        x: event.clientX,
+                        y: event.clientY,
+                      });
+                    }}
                   >
                     {selectedTabId === tab.id && (
                       <svg
@@ -177,7 +258,40 @@ const TabList = ({ viewerKind }: TabListProps) => {
                     )}
                     {tab.name}
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    draggable
+                    aria-label={t('tabs.reorder', { name: tab.name })}
+                    className="h-[24px] w-[16px] cursor-grab rounded text-[#8B8E99] hover:bg-button-hover hover:text-white active:cursor-grabbing"
+                    onDragStart={(event) => {
+                      draggingId.current = tab.id;
+                      dropCommitted.current = false;
+                      setDraftOrder(displayedIds);
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', tab.id);
+                    }}
+                    onDragEnd={() => {
+                      draggingId.current = null;
+                      if (!dropCommitted.current) setDraftOrder(null);
+                    }}
+                    onKeyDown={(event) => {
+                      const offset =
+                        event.key === 'ArrowUp'
+                          ? -1
+                          : event.key === 'ArrowDown'
+                            ? 1
+                            : null;
+                      if (!offset) return;
+                      event.preventDefault();
+                      void commitOrder(
+                        moveTabIdByOffset(displayedIds, tab.id, offset),
+                      );
+                    }}
+                  >
+                    ⋮
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -203,7 +317,10 @@ const TabList = ({ viewerKind }: TabListProps) => {
                 : 'bg-button-hover opacity-50 cursor-not-allowed'
             }`}
             disabled={tabs.length <= 1}
-            onClick={() => setAskDelete(true)}
+            onClick={() => {
+              setDeleteTabId(selectedTabId);
+              setAskDelete(true);
+            }}
           >
             <MinusIcon />
           </button>
@@ -217,20 +334,59 @@ const TabList = ({ viewerKind }: TabListProps) => {
         existingNames={tabs.map((tab) => tab.name)}
       />
 
+      <TabNameModal
+        isOpen={renameTabId !== null}
+        mode="rename"
+        initialName={tabs.find((tab) => tab.id === renameTabId)?.name ?? ''}
+        onClose={() => setRenameTabId(null)}
+        onSubmit={handleRename}
+        existingNames={tabs
+          .filter((tab) => tab.id !== renameTabId)
+          .map((tab) => tab.name)}
+      />
+
+      <ListPopup
+        open={contextMenu !== null}
+        position={contextMenu ?? undefined}
+        onClose={() => setContextMenu(null)}
+        items={[
+          { id: 'rename', label: t('tabs.rename') },
+          {
+            id: 'delete',
+            label: t('tabs.delete'),
+            disabled: tabs.length <= 1,
+          },
+        ]}
+        onSelect={(action) => {
+          const id = contextMenu?.id;
+          setContextMenu(null);
+          if (!id) return;
+          if (action === 'rename') setRenameTabId(id);
+          if (action === 'delete') {
+            setDeleteTabId(id);
+            setAskDelete(true);
+          }
+        }}
+      />
+
       <Alert
         isOpen={askDelete}
         type="confirm"
         message={t('tabs.deleteConfirm', {
-          name: tabs.find((tab) => tab.id === selectedTabId)?.name || '',
+          name: tabs.find((tab) => tab.id === deleteTabId)?.name || '',
         })}
         confirmText={t('tabs.delete')}
         cancelText={t('common.cancel')}
         showCancel
         onConfirm={async () => {
           setAskDelete(false);
-          await handleDelete();
+          if (deleteTabId) await handleDelete(deleteTabId);
+          setDeleteTabId(null);
         }}
-        onCancel={() => setAskDelete(false)}
+        onCancel={() => {
+          setAskDelete(false);
+          setDeleteTabId(null);
+        }}
       />
     </div>
   );

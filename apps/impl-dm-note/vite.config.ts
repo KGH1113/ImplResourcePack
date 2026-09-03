@@ -9,6 +9,7 @@ import pkg from "./package.json";
 
 export default defineConfig(() => {
   const projectRoot = __dirname;
+  const repositoryRoot = path.resolve(projectRoot, "../..");
   const rendererRoot = path.resolve(projectRoot, "src/renderer");
   const windowsRoot = path.resolve(rendererRoot, "windows");
   const isAnalyze = process.env.ANALYZE === "true";
@@ -61,7 +62,7 @@ export default defineConfig(() => {
       open: false,
       fs: {
         // 루트 상위(src/renderer 등) 경로 import 허용
-        allow: [projectRoot, rendererRoot, windowsRoot],
+        allow: [repositoryRoot, projectRoot, rendererRoot, windowsRoot],
       },
     },
     resolve: {

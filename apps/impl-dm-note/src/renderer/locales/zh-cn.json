@@ -1,5 +1,6 @@
 {
   "settings": {
+    "cssHistory": "最近的 CSS 文件",
     "overlayLock": "锁定悬浮窗",
     "alwaysOnTop": "始终置顶",
     "noteEffect": "显示键雨",
@@ -25,6 +26,8 @@
     "keySoundOutputDefault": "默认设备",
     "keySoundOutputBuffer": "ASIO 缓冲区大小",
     "keySoundOutputError": {
+      "deviceNotFound": "所选输出设备不可用，已使用默认输出。",
+      "deviceOpenFailed": "无法打开所选输出设备，已使用默认输出。",
       "asioUnavailableBuild": "此版本未包含 ASIO 支持。",
       "asioDeviceNotFound": "找不到 ASIO 设备。",
       "asioOpenFailed": "无法打开 ASIO 设备，将使用默认输出播放。",
@@ -273,6 +276,9 @@
     "remove": "移除"
   },
   "tabs": {
+    "renameTitle": "重命名标签页",
+    "rename": "重命名",
+    "reorder": "调整 {{name}} 顺序",
     "handViewer": "手部按键显示器",
     "footViewer": "脚部按键显示器",
     "empty": "无额外标签页",
@@ -288,6 +294,7 @@
       "duplicate": "名称已存在"
     },
     "errors": {
+      "notFound": "找不到标签页",
       "max": "最多可添加 30 个标签页",
       "invalid": "无效的名称",
       "createFail": "创建失败"
@@ -423,6 +430,8 @@
     "cancel": "取消"
   },
   "tabCss": {
+    "history": "最近的 CSS 文件",
+    "export": "导出 CSS",
     "enableCss": "启用标签页 CSS",
     "cssFile": "CSS 文件",
     "noFile": "(未选择 CSS 文件)",

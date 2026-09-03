@@ -138,6 +138,7 @@ pub fn preset_load(state: State<'_, AppState>, app: AppHandle) -> CmdResult<Pres
     for tab in tab_note_overrides.values_mut() {
         tab.migrate_fade_position();
     }
+    let tab_css_overrides = preset.tab_css_overrides.unwrap_or_default();
 
     state.store.update(|store| {
         store.keys = keys.clone();
@@ -149,6 +150,7 @@ pub fn preset_load(state: State<'_, AppState>, app: AppHandle) -> CmdResult<Pres
         store.selected_viewer_tabs = selected_viewer_tabs.clone();
         store.selected_key_type = selected_key_type.clone();
         store.tab_note_overrides = tab_note_overrides.clone();
+        store.tab_css_overrides = tab_css_overrides.clone();
     })?;
 
     state.keyboard.update_mappings(keys.clone());
@@ -180,6 +182,7 @@ pub fn preset_load(state: State<'_, AppState>, app: AppHandle) -> CmdResult<Pres
     })?;
 
     state.emit_settings_changed(&diff, &app)?;
+    state.reload_css_watchers();
 
     // 프리셋 데이터를 단일 이벤트로 원자적 전달
     app.emit(
@@ -194,10 +197,12 @@ pub fn preset_load(state: State<'_, AppState>, app: AppHandle) -> CmdResult<Pres
             selected_viewer_tabs,
             selected_key_type,
             tab_note_overrides,
+            tab_css_overrides: tab_css_overrides.clone(),
         },
     )?;
     app.emit("css:use", &serde_json::json!({ "enabled": css_use }))?;
     app.emit("css:content", &custom_css)?;
+    app.emit("tabCss:changed_all", &tab_css_overrides)?;
     app.emit("js:use", &serde_json::json!({ "enabled": js_use }))?;
     app.emit("js:content", &custom_js)?;
 
@@ -238,6 +243,7 @@ pub fn preset_load_tab(
         knob_positions,
         selected_key_type,
         tab_note_overrides,
+        tab_css_overrides,
         embedded_local_images,
         embedded_local_sounds,
         ..
@@ -283,6 +289,7 @@ pub fn preset_load_tab(
     }
 
     let mut imported_tab_note_overrides = tab_note_overrides.unwrap_or_default();
+    let imported_tab_css_overrides = tab_css_overrides.unwrap_or_default();
     for tab in imported_tab_note_overrides.values_mut() {
         tab.migrate_fade_position();
     }
@@ -328,6 +335,13 @@ pub fn preset_load_tab(
     } else {
         snapshot.tab_note_overrides.remove(&current_tab_id);
     }
+    if let Some(css) = imported_tab_css_overrides.get(&source_tab_id).cloned() {
+        snapshot
+            .tab_css_overrides
+            .insert(current_tab_id.clone(), css);
+    } else {
+        snapshot.tab_css_overrides.remove(&current_tab_id);
+    }
 
     let full_keys = snapshot.keys.clone();
     let full_positions = snapshot.key_positions.clone();
@@ -335,6 +349,7 @@ pub fn preset_load_tab(
     let full_graph_positions = snapshot.graph_positions.clone();
     let full_knob_positions = snapshot.knob_positions.clone();
     let full_tab_note_overrides = snapshot.tab_note_overrides.clone();
+    let full_tab_css_overrides = snapshot.tab_css_overrides.clone();
 
     state.store.update(|store| {
         store.keys = full_keys.clone();
@@ -343,9 +358,11 @@ pub fn preset_load_tab(
         store.graph_positions = full_graph_positions.clone();
         store.knob_positions = full_knob_positions.clone();
         store.tab_note_overrides = full_tab_note_overrides.clone();
+        store.tab_css_overrides = full_tab_css_overrides.clone();
     })?;
 
     state.keyboard.update_mappings(full_keys.clone());
+    state.reload_css_watchers();
 
     app.emit("keys:changed", &full_keys)?;
     app.emit("positions:changed", &full_positions)?;
@@ -353,6 +370,7 @@ pub fn preset_load_tab(
     app.emit("graphPositions:changed", &full_graph_positions)?;
     app.emit("knobPositions:changed", &full_knob_positions)?;
     app.emit("tabNote:changed_all", &full_tab_note_overrides)?;
+    app.emit("tabCss:changed_all", &full_tab_css_overrides)?;
 
     // OBS 브릿지: 탭 프리셋 로드 시 전체 스냅샷 재전송
     state.refresh_obs_snapshot();

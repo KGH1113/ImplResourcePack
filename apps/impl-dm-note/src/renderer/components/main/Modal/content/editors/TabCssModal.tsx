@@ -4,6 +4,8 @@ import Checkbox from '@components/main/common/Checkbox';
 import { useTranslation } from '@contexts/useTranslation';
 import { useKeyStore } from '@stores/data/useKeyStore';
 import type { TabCss } from '@src/types/plugin/css';
+import Button from '@components/main/common/Button';
+import type { CustomCssHistoryEntry } from '@src/types/plugin/api';
 
 interface TabCssModalProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ const TabCssModal = ({ isOpen, onClose, showAlert }: TabCssModalProps) => {
 
   const [tabCss, setTabCss] = useState<TabCss | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState<CustomCssHistoryEntry[]>([]);
 
   // 모달 열기 시점의 원본 상태 저장 (취소 시 복원용)
   const originalStateRef = useRef<TabCss | null>(null);
@@ -26,6 +29,7 @@ const TabCssModal = ({ isOpen, onClose, showAlert }: TabCssModalProps) => {
     if (!isOpen) return;
 
     setIsLoading(true);
+    window.api.css.history.list().then(setHistory).catch(console.error);
     window.api.css.tab
       .get(selectedKeyType)
       .then((tabResponse) => {
@@ -62,12 +66,20 @@ const TabCssModal = ({ isOpen, onClose, showAlert }: TabCssModalProps) => {
       const result = await window.api.css.tab.load(selectedKeyType);
       if (result.success && result.css) {
         setTabCss(result.css);
+        setHistory(await window.api.css.history.list());
       } else if (result.error) {
         showAlert?.(t('tabCss.loadFailed') + ': ' + result.error);
       }
     } catch (error) {
       console.error('Failed to load tab CSS:', error);
     }
+  };
+
+  const handleApplyHistory = async (path: string) => {
+    const result = await window.api.css.tab.applyHistory(selectedKeyType, path);
+    if (result.success && result.css) setTabCss(result.css);
+    else if (result.error) showAlert?.(result.error);
+    setHistory(await window.api.css.history.list());
   };
 
   const handleClearCss = async () => {
@@ -136,7 +148,7 @@ const TabCssModal = ({ isOpen, onClose, showAlert }: TabCssModalProps) => {
   return (
     <Modal onClick={handleCancel}>
       <div
-        className="flex flex-col items-center justify-center p-[20px] bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30] gap-[19px]"
+        className="dmn-manager-surface flex flex-col items-center justify-center gap-[14px] p-[18px]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* CSS 사용 여부 토글 */}
@@ -145,47 +157,62 @@ const TabCssModal = ({ isOpen, onClose, showAlert }: TabCssModalProps) => {
           <Checkbox checked={cssEnabled} onChange={handleToggleCss} />
         </div>
 
+        {history.length > 0 && (
+          <div className="flex w-full flex-col gap-[5px]">
+            <p className="text-white text-style-2">{t('tabCss.history')}</p>
+            {history.map((entry) => (
+              <button
+                key={entry.path}
+                type="button"
+                title={entry.path}
+                className="h-[26px] truncate rounded-[7px] bg-button-primary px-[8px] text-left text-style-1 text-[#DBDEE8] hover:bg-button-hover"
+                onClick={() => void handleApplyHistory(entry.path)}
+              >
+                {entry.path.split(/[/\\]/).pop()}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <Button
+          size="sm"
+          variant="secondary"
+          block
+          disabled={!hasTabCss}
+          onClick={async () => {
+            const result = await window.api.css.tab.export(selectedKeyType);
+            if (result.error) showAlert?.(result.error);
+          }}
+        >
+          {t('tabCss.export')}
+        </Button>
+
         {/* CSS 파일 */}
         <div className="flex justify-between w-full items-center">
           <p className="text-white text-style-2">{t('tabCss.cssFile')}</p>
           <div className="flex items-center gap-[8px]">
-            <button
-              type="button"
+            <Button
+              size="sm"
+              variant="danger"
               onClick={handleClearCss}
               disabled={isLoading || !hasTabCss}
-              className={`px-[7px] h-[23px] rounded-[7px] border-[1px] flex items-center justify-center text-style-4 ${
-                hasTabCss
-                  ? 'bg-[#3C1E1E] hover:bg-[#442222] active:bg-[#522929] border-[#4A2A2A] text-[#E6DBDB]'
-                  : 'bg-[#2A2A30] border-[#3A3943] text-[#6B6D77] cursor-not-allowed'
-              }`}
             >
               {t('tabCss.remove')}
-            </button>
-            <button
-              type="button"
-              onClick={handleLoadCss}
-              disabled={isLoading}
-              className="px-[7px] h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] border-[#3A3943] flex items-center justify-center text-[#DBDEE8] text-style-4 hover:bg-[#303036] active:bg-[#393941]"
-            >
+            </Button>
+            <Button size="sm" onClick={handleLoadCss} disabled={isLoading}>
               {t('tabCss.loadFile')}
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* 버튼 영역 */}
         <div className="flex gap-[10.5px]">
-          <button
-            onClick={handleSave}
-            className="w-[150px] h-[30px] bg-[#2A2A30] hover:bg-[#303036] active:bg-[#393941] rounded-[7px] text-[#DCDEE7] text-style-3"
-          >
+          <Button variant="primary" onClick={handleSave} className="w-[150px]">
             {t('keySetting.save')}
-          </button>
-          <button
-            onClick={handleCancel}
-            className="w-[75px] h-[30px] bg-[#3C1E1E] hover:bg-[#442222] active:bg-[#522929] rounded-[7px] text-[#E6DBDB] text-style-3"
-          >
+          </Button>
+          <Button variant="danger" onClick={handleCancel} className="w-[75px]">
             {t('keySetting.cancel')}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

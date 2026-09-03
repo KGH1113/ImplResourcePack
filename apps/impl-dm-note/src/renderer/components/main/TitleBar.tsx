@@ -17,12 +17,12 @@ const TitleBar = (): React.ReactElement => {
   return (
     <div
       data-tauri-drag-region
-      className="relative w-full h-[30px] min-h-[30px] flex justify-center items-center bg-primary rounded-t-[6px] [app-region:drag]"
+      className="dmn-titlebar relative flex h-[30px] min-h-[30px] w-full items-center justify-center [app-region:drag]"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
-      <div className="flex items-center gap-[6px]">
-        <Logo className="w-[12px] h-[12px]" />
-        <div className="text-[12px] font-bold tracking-[0.05em] text-[#999BA5] select-none">
+      <div className="pointer-events-none flex items-center gap-[6px] text-ui-fg-muted">
+        <Logo className="h-[12px] w-[12px] shrink-0" />
+        <div className="select-none text-[12px] font-semibold leading-[12px] tracking-[0.06em]">
           ImplDmNote
         </div>
       </div>
@@ -33,14 +33,18 @@ const TitleBar = (): React.ReactElement => {
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           <button
+            type="button"
+            aria-label="Minimize"
             onClick={handleMinimize}
-            className="w-[36px] h-full flex justify-center items-center hover:bg-[#21232B] active:bg-[#282B35] transition-colors"
+            className="dmn-window-control flex h-full w-[38px] items-center justify-center"
           >
             <Minimize className="scale-[0.8] pointer-events-none" />
           </button>
           <button
+            type="button"
+            aria-label="Close"
             onClick={handleClose}
-            className="w-[36px] h-full flex justify-center items-center hover:bg-[#501D1E] active:bg-[#5A2829] transition-colors rounded-tr-[6px]"
+            className="dmn-window-control dmn-window-control--close flex h-full w-[38px] items-center justify-center"
           >
             <Close className="scale-[0.7] pointer-events-none" />
           </button>

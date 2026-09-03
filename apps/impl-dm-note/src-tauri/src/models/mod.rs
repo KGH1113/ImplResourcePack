@@ -104,6 +104,10 @@ impl Default for SoundLibraryEntry {
 )]
 pub enum KeySoundOutputBackendPersist {
     DefaultDevice,
+    Device {
+        id: String,
+        name: String,
+    },
     Asio {
         driver_name: String,
         /// ASIO 버퍼 크기(프레임). None이면 엔진 기본값 사용
@@ -990,6 +994,14 @@ pub struct CustomCss {
     pub content: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomCssHistoryEntry {
+    pub path: String,
+    pub loaded_at: u64,
+    pub last_used_at: u64,
+}
+
 /// 탭별 CSS 설정
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -1328,6 +1340,8 @@ pub struct AppStoreData {
     #[serde(default)]
     pub custom_css: CustomCss,
     #[serde(default)]
+    pub custom_css_history: Vec<CustomCssHistoryEntry>,
+    #[serde(default)]
     pub font_settings: FontSettings,
     #[serde(default)]
     pub counter_animation_presets: Vec<CounterAnimationPreset>,
@@ -1424,6 +1438,7 @@ impl Default for AppStoreData {
             background_color: "transparent".to_string(),
             use_custom_css: false,
             custom_css: CustomCss::default(),
+            custom_css_history: Vec::new(),
             font_settings: FontSettings::default(),
             counter_animation_presets: Vec::new(),
             tab_css_overrides: TabCssOverrides::new(),

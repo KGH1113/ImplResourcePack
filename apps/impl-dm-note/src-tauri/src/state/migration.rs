@@ -583,6 +583,32 @@ fn has_convertible_note_border_color(data: &AppStoreData) -> bool {
 
 /// store 데이터 정규화 및 레거시 마이그레이션 적용
 pub(crate) fn normalize_state(mut data: AppStoreData) -> AppStoreData {
+    if let Some(path) = data.custom_css.path.clone() {
+        if !data
+            .custom_css_history
+            .iter()
+            .any(|entry| entry.path == path)
+        {
+            data.custom_css_history
+                .push(crate::models::CustomCssHistoryEntry {
+                    path,
+                    loaded_at: 0,
+                    last_used_at: 0,
+                });
+        }
+    }
+    data.custom_css_history.retain(|entry| {
+        Path::new(&entry.path)
+            .extension()
+            .and_then(|value| value.to_str())
+            == Some("css")
+    });
+    data.custom_css_history
+        .sort_by_key(|entry| std::cmp::Reverse(entry.last_used_at));
+    let mut seen_css_paths = std::collections::HashSet::new();
+    data.custom_css_history
+        .retain(|entry| seen_css_paths.insert(entry.path.clone()));
+    data.custom_css_history.truncate(10);
     if data.overlay_windows.hand.bounds.is_none() {
         data.overlay_windows.hand.bounds = data.overlay_bounds.take();
         data.overlay_windows.hand.last_content_top_offset =
@@ -793,6 +819,12 @@ fn repair_legacy_state(raw: &str) -> AppStoreData {
             .and_then(|v| serde_json::from_value(v.clone()).ok())
         {
             data.custom_css = v;
+        }
+        if let Some(v) = obj
+            .get("customCssHistory")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+        {
+            data.custom_css_history = v;
         }
         if let Some(v) = obj.get("useCustomJS").and_then(Value::as_bool) {
             data.use_custom_js = v;

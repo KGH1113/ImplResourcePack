@@ -6,6 +6,7 @@ import type {
 } from '@src/types/plugin/api';
 import type { PluginSettingsPanelPayload } from '@stores/grid/usePropertiesPanelStore';
 import { SidebarToggleIcon } from './PropertyInputs';
+import { PANEL_ROOT_CLASS } from './panelChrome';
 
 interface PluginSettingsPanelViewProps {
   setPanelElement: (el: HTMLDivElement | null) => void;
@@ -43,11 +44,8 @@ const PluginSettingsPanelView: React.FC<PluginSettingsPanelViewProps> = ({
   t,
 }) => {
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
-      <div className="flex items-center justify-between p-[12px] border-b border-[#3A3943]">
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
+      <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
         <div className="flex flex-col gap-[2px]">
           <span className="text-[#DBDEE8] text-style-2">
             {t('propertiesPanel.pluginSettings') || '플러그인 설정'}
@@ -87,7 +85,7 @@ const PluginSettingsPanelView: React.FC<PluginSettingsPanelViewProps> = ({
           </div>
         </div>
       </div>
-      <div className="border-t border-[#3A3943] p-[12px]">
+      <div className="dmn-properties-panel__footer p-[12px]">
         <div className="flex gap-[8px]">
           <button
             onClick={handlePluginSettingsPanelCancel}

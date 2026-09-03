@@ -318,7 +318,8 @@ const GridMinimap = ({
   return (
     <div
       ref={minimapRef}
-      className="absolute bottom-2 left-2 flex flex-col gap-[2px] select-none"
+      data-dmn-app-surface
+      className="dmn-grid-minimap absolute bottom-2 left-2 flex select-none flex-col gap-[4px]"
       style={{
         opacity: shouldShow ? 1 : 0,
         transition: 'opacity 200ms ease-out',
@@ -329,38 +330,23 @@ const GridMinimap = ({
     >
       {/* 줌 컨트롤 (미니맵 위) */}
       <div
-        className="flex items-center cursor-default"
+        className="dmn-minimap-zoom flex items-center cursor-default"
         style={{
           width: MINIMAP_WIDTH,
           height: 23,
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          borderRadius: 4,
-          border: '1px solid rgba(255, 255, 255, 0.2)',
           boxSizing: 'border-box',
           overflow: 'hidden',
         }}
       >
         {/* 초기화 버튼 */}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
+          aria-label="Reset zoom"
           onClick={(e) => {
             e.stopPropagation();
             onResetZoom();
           }}
-          className="flex-1 flex items-center justify-center h-full text-white/70 hover:text-white cursor-pointer"
-          style={{
-            borderTopLeftRadius: 3,
-            borderBottomLeftRadius: 3,
-            backgroundColor: 'transparent',
-            transition: 'background-color 150ms, color 150ms',
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = 'transparent')
-          }
+          className="dmn-minimap-control flex h-full flex-1 cursor-pointer items-center justify-center"
           title="Reset zoom (Ctrl+0)"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -397,26 +383,16 @@ const GridMinimap = ({
               strokeLinejoin="round"
             />
           </svg>
-        </div>
+        </button>
         {/* 확대 버튼 */}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
+          aria-label="Zoom in"
           onClick={(e) => {
             e.stopPropagation();
             onZoomIn();
           }}
-          className="flex-1 flex items-center justify-center h-full text-white/70 hover:text-white cursor-pointer"
-          style={{
-            backgroundColor: 'transparent',
-            transition: 'background-color 150ms, color 150ms',
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = 'transparent')
-          }
+          className="dmn-minimap-control flex h-full flex-1 cursor-pointer items-center justify-center"
           title="Zoom in (Ctrl++)"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -427,26 +403,16 @@ const GridMinimap = ({
               strokeLinecap="round"
             />
           </svg>
-        </div>
+        </button>
         {/* 축소 버튼 */}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
+          aria-label="Zoom out"
           onClick={(e) => {
             e.stopPropagation();
             onZoomOut();
           }}
-          className="flex-1 flex items-center justify-center h-full text-white/70 hover:text-white cursor-pointer"
-          style={{
-            backgroundColor: 'transparent',
-            transition: 'background-color 150ms, color 150ms',
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = 'transparent')
-          }
+          className="dmn-minimap-control flex h-full flex-1 cursor-pointer items-center justify-center"
           title="Zoom out (Ctrl+-)"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -457,10 +423,10 @@ const GridMinimap = ({
               strokeLinecap="round"
             />
           </svg>
-        </div>
+        </button>
         {/* 현재 배율 */}
         <span
-          className="w-[42px] h-full flex items-center justify-center text-white/70 text-xs"
+          className="dmn-minimap-readout flex h-full w-[42px] items-center justify-center text-xs tabular-nums"
           style={{ borderTopRightRadius: 4, borderBottomRightRadius: 4 }}
         >
           {Math.round(zoom * 100)}%
@@ -468,11 +434,10 @@ const GridMinimap = ({
       </div>
       {/* 미니맵 */}
       <div
-        className="relative bg-black/60 rounded cursor-pointer"
+        className="dmn-minimap-canvas relative cursor-pointer"
         style={{
           width: MINIMAP_WIDTH,
           height: MINIMAP_HEIGHT,
-          border: '1px solid rgba(255, 255, 255, 0.2)',
           boxSizing: 'border-box',
         }}
         onClick={handleMinimapClick}

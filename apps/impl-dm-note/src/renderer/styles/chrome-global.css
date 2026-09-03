@@ -1,0 +1,55 @@
+@font-face {
+  font-family: 'Pretendard Variable';
+  src: url('../assets/fonts/PretendardVariable.woff2') format('woff2');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}
+
+[data-dmn-app-chrome],
+[data-dmn-app-portal],
+[data-dmn-app-surface] {
+  color: var(--ui-fg-primary);
+  font-size: var(--ui-type-body-size);
+  font-weight: var(--ui-type-body-weight);
+  line-height: var(--ui-type-body-line);
+  letter-spacing: var(--ui-type-body-tracking);
+  font-family:
+    'Pretendard Variable',
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-synthesis: none;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+[data-dmn-viewer-surface] {
+  font-family: 'SUIT-Regular', sans-serif;
+  font-synthesis: initial;
+}
+
+[data-dmn-app-chrome]
+  :where(button, input, select, textarea):not([data-dmn-viewer-surface] *),
+[data-dmn-app-portal] :where(button, input, select, textarea) {
+  font: inherit;
+}
+
+[data-dmn-app-chrome] :focus-visible:not([data-dmn-viewer-surface] *),
+[data-dmn-app-portal] :focus-visible {
+  outline: 0;
+  box-shadow: var(--ui-shadow-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-dmn-app-chrome] *:not([data-dmn-viewer-surface] *),
+  [data-dmn-app-portal] * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

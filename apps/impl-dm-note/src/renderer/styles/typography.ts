@@ -1,32 +1,30 @@
 export const typography = {
   style: {
-    // 12px m
+    // Legacy aliases remain available while application surfaces migrate to
+    // the named v2 scale. Values intentionally reference the shared tokens.
     1: {
-      fontSize: '12px',
-      fontWeight: '500',
-      lineHeight: '12px',
-      letterSpacing: '0px',
+      fontSize: 'var(--ui-type-caption-size)',
+      fontWeight: 'var(--ui-type-caption-weight)',
+      lineHeight: 'var(--ui-type-caption-line)',
+      letterSpacing: 'var(--ui-type-caption-tracking)',
     },
-    // 13px m
     2: {
-      fontSize: '13px',
-      fontWeight: '500',
-      lineHeight: '13px',
-      letterSpacing: '0px',
+      fontSize: 'var(--ui-type-label-size)',
+      fontWeight: 'var(--ui-type-label-weight)',
+      lineHeight: 'var(--ui-type-label-line)',
+      letterSpacing: 'var(--ui-type-label-tracking)',
     },
-    // 14px m
     3: {
-      fontSize: '14px',
-      fontWeight: '500',
-      lineHeight: '14px',
-      letterSpacing: '0px',
+      fontSize: 'var(--ui-type-title-size)',
+      fontWeight: 'var(--ui-type-title-weight)',
+      lineHeight: 'var(--ui-type-title-line)',
+      letterSpacing: 'var(--ui-type-title-tracking)',
     },
-    // 14px sb
     4: {
-      fontSize: '14px',
-      fontWeight: '500',
-      lineHeight: '14px',
-      letterSpacing: '0px',
+      fontSize: 'var(--ui-type-body-size)',
+      fontWeight: 'var(--ui-type-body-weight)',
+      lineHeight: 'var(--ui-type-body-line)',
+      letterSpacing: 'var(--ui-type-body-tracking)',
     },
   },
 } as const;

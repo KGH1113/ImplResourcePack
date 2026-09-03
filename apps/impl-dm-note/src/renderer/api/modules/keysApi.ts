@@ -12,6 +12,7 @@ import type {
   KeyStatePayload,
   TabResult,
   TabDeleteResult,
+  TabMutationResult,
   RawInputPayload,
 } from '@src/types/plugin/api';
 import type {
@@ -78,6 +79,10 @@ export const keysApi = {
       invoke<KeyViewerTab[]>('tabs_list', { viewerKind }),
     create: (viewerKind: KeyViewerKind, name: string) =>
       invoke<TabResult>('tabs_create', { viewerKind, name }),
+    rename: (viewerKind: KeyViewerKind, id: string, name: string) =>
+      invoke<TabMutationResult>('tabs_rename', { viewerKind, id, name }),
+    reorder: (viewerKind: KeyViewerKind, orderedIds: string[]) =>
+      invoke<TabMutationResult>('tabs_reorder', { viewerKind, orderedIds }),
     delete: (id: string) => invoke<TabDeleteResult>('tabs_delete', { id }),
     select: (viewerKind: KeyViewerKind, id: string) =>
       invoke<TabDeleteResult>('tabs_select', { viewerKind, id }),

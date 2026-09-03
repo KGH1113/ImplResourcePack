@@ -1,5 +1,6 @@
 {
   "settings": {
+    "cssHistory": "Recent CSS files",
     "overlayLock": "Lock Overlay Window",
     "alwaysOnTop": "Always on Top",
     "noteEffect": "Show Note Effect",
@@ -25,6 +26,8 @@
     "keySoundOutputDefault": "Default Device",
     "keySoundOutputBuffer": "ASIO Buffer Size",
     "keySoundOutputError": {
+      "deviceNotFound": "The selected output device is unavailable; playback uses the default output.",
+      "deviceOpenFailed": "The selected output device could not be opened; playback uses the default output.",
       "asioUnavailableBuild": "This build does not include ASIO support.",
       "asioDeviceNotFound": "ASIO device not found.",
       "asioOpenFailed": "Could not open the ASIO device, so playback uses the default output.",
@@ -272,6 +275,9 @@
     "remove": "Remove"
   },
   "tabs": {
+    "renameTitle": "Rename Tab",
+    "rename": "Rename",
+    "reorder": "Reorder {{name}}",
     "handViewer": "Hand key viewer",
     "footViewer": "Foot key viewer",
     "empty": "No additional tabs",
@@ -287,6 +293,7 @@
       "duplicate": "Name already exists"
     },
     "errors": {
+      "notFound": "Tab not found",
       "max": "You can add up to 30 tabs",
       "invalid": "Invalid name",
       "createFail": "Failed to create"
@@ -420,6 +427,8 @@
     "cancel": "Cancel"
   },
   "tabCss": {
+    "history": "Recent CSS files",
+    "export": "Export CSS",
     "enableCss": "Active tab CSS",
     "cssFile": "CSS File",
     "noFile": "(No CSS file selected)",

@@ -1,0 +1,88 @@
+{
+  "surface": "main",
+  "fixture": "foot-note-counter",
+  "viewerKind": "foot",
+  "hiddenKeyCount": 1,
+  "note": {
+    "enabled": true,
+    "speed": 180,
+    "trackHeight": 150,
+    "glowSize": 20,
+    "canvas": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "keys": [
+    {
+      "state": "inactive",
+      "keyElement": "true",
+      "className": "absolute cursor-pointer  visual-key",
+      "childKinds": [
+        {
+          "tag": "div",
+          "className": "flex items-center justify-center h-full font-bold text-safe-inline"
+        }
+      ],
+      "decorativeChildren": [],
+      "style": {
+        "backgroundColor": "rgba(46, 46, 47, 0.9)",
+        "borderStyle": "solid",
+        "borderWidth": "3px",
+        "borderColor": "rgba(121, 121, 121, 0.9)",
+        "borderRadius": "10px",
+        "transform": "matrix(1, 0, 0, 1, 420, 520)",
+        "opacity": "1",
+        "overflow": "hidden",
+        "position": "absolute"
+      }
+    },
+    {
+      "state": "inactive",
+      "keyElement": "true",
+      "className": "absolute cursor-pointer  visual-key",
+      "childKinds": [
+        {
+          "tag": "div",
+          "className": "flex flex-col w-full h-full items-center pointer-events-none select-none"
+        }
+      ],
+      "decorativeChildren": [],
+      "style": {
+        "backgroundColor": "rgba(46, 46, 47, 0.9)",
+        "borderStyle": "solid",
+        "borderWidth": "3px",
+        "borderColor": "rgba(121, 121, 121, 0.9)",
+        "borderRadius": "10px",
+        "transform": "matrix(1, 0, 0, 1, 610, 520)",
+        "opacity": "1",
+        "overflow": "hidden",
+        "position": "absolute"
+      }
+    }
+  ],
+  "counters": [
+    {
+      "text": "24",
+      "state": "inactive",
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "700",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "color": "rgba(121, 121, 121, 0.9)",
+        "strokeWidth": "0px"
+      }
+    },
+    {
+      "text": "12",
+      "state": "inactive",
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "700",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "color": "rgba(121, 121, 121, 0.9)",
+        "strokeWidth": "0px"
+      }
+    }
+  ]
+}

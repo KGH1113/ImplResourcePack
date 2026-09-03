@@ -5,6 +5,10 @@ import { useSettingsStore } from '@stores/useSettingsStore';
 import { useKeyStore } from '@stores/data/useKeyStore';
 import Checkbox from '@components/main/common/Checkbox';
 import Dropdown from '@components/main/common/Dropdown';
+import Button from '@components/main/common/Button';
+import SettingsSidePanel, {
+  type SettingsPanelKey,
+} from '@components/main/SettingsPanel/SettingsSidePanel';
 import ResetIcon from '@assets/svgs/reset.svg';
 import { PluginManagerModal } from '@components/main/Modal/content/managers/PluginManagerModal';
 import { PluginDataDeleteModal } from '@components/main/Modal/content/dialogs/PluginDataDeleteModal';
@@ -22,6 +26,7 @@ import type {
   JsRemoveResult,
   JsPluginUpdateResult,
   KeysResetAllResponse,
+  CustomCssHistoryEntry,
 } from '@src/types/plugin/api';
 import type { JsPlugin } from '@src/types/plugin/js';
 import type { KeyCounters } from '@src/types/key/keys';
@@ -30,6 +35,7 @@ import { keySoundOutputApi } from '@api/modules/resourceApi';
 import type {
   KeySoundOutputBackend,
   KeySoundOutputState,
+  KeySoundOutputDevice,
 } from '@api/modules/resourceApi';
 import type { ObsStatus } from '@src/types/obs';
 import { DEFAULT_OBS_PORT } from '@src/types/obs';
@@ -44,12 +50,15 @@ const KEY_SOUND_OUTPUT_ERROR_KEYS: Record<string, string> = {
   asioDeviceNotFound: 'settings.keySoundOutputError.asioDeviceNotFound',
   asioOpenFailed: 'settings.keySoundOutputError.asioOpenFailed',
   defaultOpenFailed: 'settings.keySoundOutputError.defaultOpenFailed',
+  deviceNotFound: 'settings.keySoundOutputError.deviceNotFound',
+  deviceOpenFailed: 'settings.keySoundOutputError.deviceOpenFailed',
 };
 
 // 설정 패널은 열 때마다 재마운트되므로, 마지막 출력 상태를 모듈에 캐시해
 // 재진입 시 '기본 장치 → ASIO' 드롭다운 깜빡임을 방지한다.
 let cachedKeySoundOutput: KeySoundOutputState | null = null;
 let cachedAsioDrivers: string[] = [];
+let cachedSystemDevices: KeySoundOutputDevice[] = [];
 let cachedAsioDriversLoaded = false;
 
 interface SettingsProps {
@@ -119,6 +128,9 @@ const Settings = ({
   const [isDataDeleteModalOpen, setDataDeleteModalOpen] =
     useState<boolean>(false);
   const [isShortcutModalOpen, setShortcutModalOpen] = useState<boolean>(false);
+  const [activeSettingsPanel, setActiveSettingsPanel] =
+    useState<SettingsPanelKey | null>(null);
+  const [cssHistory, setCssHistory] = useState<CustomCssHistoryEntry[]>([]);
   const [pluginToDelete, setPluginToDelete] = useState<PluginToDelete | null>(
     null,
   );
@@ -138,6 +150,8 @@ const Settings = ({
   const [keySoundOutput, setKeySoundOutputRaw] =
     useState<KeySoundOutputState | null>(cachedKeySoundOutput);
   const [asioDrivers, setAsioDrivers] = useState<string[]>(cachedAsioDrivers);
+  const [systemDevices, setSystemDevices] =
+    useState<KeySoundOutputDevice[]>(cachedSystemDevices);
   // 목록 로딩 완료 전에는 드롭다운을 잠그지 않음 (첫 마운트 비활성 깜빡임 방지)
   const [asioDriversLoaded, setAsioDriversLoaded] = useState(
     cachedAsioDriversLoaded,
@@ -158,8 +172,10 @@ const Settings = ({
         ]);
         if (cancelled) return;
         cachedAsioDrivers = devices.asio;
+        cachedSystemDevices = devices.system ?? [];
         cachedAsioDriversLoaded = true;
         setAsioDrivers(devices.asio);
+        setSystemDevices(devices.system ?? []);
         setAsioDriversLoaded(true);
         setKeySoundOutput(state);
       } catch (error) {
@@ -179,7 +195,15 @@ const Settings = ({
           // ASIO 선택 시 기본 버퍼 64 (게임과 동일하게 맞춰야 공존 가능)
           bufferSize: DEFAULT_ASIO_BUFFER,
         }
-      : { kind: 'defaultDevice' };
+      : val.startsWith('device:')
+        ? (() => {
+            const id = val.slice('device:'.length);
+            const device = systemDevices.find(
+              (candidate) => candidate.id === id,
+            );
+            return { kind: 'device' as const, id, name: device?.name ?? id };
+          })()
+        : { kind: 'defaultDevice' };
     try {
       const next = await keySoundOutputApi.setBackend(backend);
       setKeySoundOutput(next);
@@ -333,6 +357,7 @@ const Settings = ({
       if (result.success) {
         if (result.content) setCustomCSSContent(result.content);
         if (result.path) setCustomCSSPath(result.path);
+        setCssHistory(await window.api.css.history.list());
         showAlert?.(t('settings.cssLoaded'));
       } else {
         const message: string = result.error
@@ -344,6 +369,22 @@ const Settings = ({
       console.error('Failed to load custom CSS', error);
       showAlert?.(`${t('settings.cssLoadFailed')}${error}`);
     }
+  };
+
+  useEffect(() => {
+    if (activeSettingsPanel !== 'css') return;
+    window.api.css.history.list().then(setCssHistory).catch(console.error);
+  }, [activeSettingsPanel]);
+
+  const activateCssHistory = async (path: string) => {
+    const result = await window.api.css.history.activate(path);
+    if (!result.success || !result.css) {
+      showAlert?.(result.error ?? t('settings.cssLoadFailed'));
+      return;
+    }
+    setCustomCSSContent(result.css.content);
+    setCustomCSSPath(result.css.path ?? null);
+    setCssHistory(await window.api.css.history.list());
   };
 
   const handleToggleCustomJS = async (): Promise<void> => {
@@ -562,10 +603,7 @@ const Settings = ({
   };
 
   const actionButtonClass = (enabled: boolean): string =>
-    'py-[4px] px-[8px] border-[1px] rounded-[7px] text-style-2 transition-colors ' +
-    (enabled
-      ? 'bg-[#2A2A31] border-[#3A3944] text-[#DBDEE8] hover:bg-[#34343c]'
-      : 'bg-[#222228] border-[#31303C] text-[#44464E] cursor-not-allowed');
+    `dmn-inline-action ${enabled ? '' : 'is-disabled'}`;
 
   const handleNoteEffectChange = async (): Promise<void> => {
     const next: boolean = !noteEffect;
@@ -754,6 +792,15 @@ const Settings = ({
     keySoundOutput?.requested.kind === 'asio'
       ? keySoundOutput.requested.driverName
       : null;
+  const requestedSystemDevice =
+    keySoundOutput?.requested.kind === 'device'
+      ? keySoundOutput.requested
+      : null;
+  const visibleSystemDevices =
+    requestedSystemDevice &&
+    !systemDevices.some((device) => device.id === requestedSystemDevice.id)
+      ? [...systemDevices, requestedSystemDevice]
+      : systemDevices;
   const visibleAsioDrivers =
     requestedAsioDriver && !asioDrivers.includes(requestedAsioDriver)
       ? [...asioDrivers, requestedAsioDriver]
@@ -775,20 +822,20 @@ const Settings = ({
     : keySoundOutput?.error;
 
   return (
-    <div className="relative w-full h-full">
+    <div className="dmn-settings relative h-full w-full overflow-hidden">
       <div
         ref={scrollContainerRef}
-        className={`settings-content-scroll w-full h-full flex flex-col py-[10px] px-[10px] gap-[19px] overflow-y-auto bg-[#0B0B0D] ${
+        className={`settings-content-scroll dmn-settings-list absolute inset-y-0 left-0 flex w-[372px] flex-col gap-[12px] overflow-y-auto p-[12px] ${
           isScrollHovered ? 'show-scrollbar' : ''
         }`}
         onMouseEnter={() => setIsScrollHovered(true)}
         onMouseLeave={() => setIsScrollHovered(false)}
       >
         {/* 설정 */}
-        <div className="flex flex-row gap-[19px]">
-          <div className="flex flex-col gap-[10px] w-[348px]">
+        <div className="flex min-h-full flex-col">
+          <div className="flex w-[348px] flex-col gap-[12px]">
             {/* 키뷰어 설정 */}
-            <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
+            <div className="dmn-setting-card flex flex-col">
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
                 onClick={handleOverlayLockChange}
@@ -895,7 +942,7 @@ const Settings = ({
               </div>
             </div>
             {/* 커스텀 CSS & JS 설정 */}
-            <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
+            <div className="dmn-setting-card flex flex-col">
               <div className="flex flex-col gap-[0px]">
                 <div
                   className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
@@ -983,7 +1030,7 @@ const Settings = ({
                       />
                     </button>
                     <button
-                      onClick={handleOpenPluginModal}
+                      onClick={() => setActiveSettingsPanel('plugins')}
                       className={actionButtonClass(true)}
                     >
                       {t('settings.managePlugins')}
@@ -996,7 +1043,7 @@ const Settings = ({
               </div>
             </div>
             {/* OBS 모드 */}
-            <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
+            <div className="dmn-setting-card flex flex-col">
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
                 onClick={handleObsToggle}
@@ -1056,7 +1103,7 @@ const Settings = ({
               </div>
             </div>
             {/* 키음 출력 설정 */}
-            <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
+            <div className="dmn-setting-card flex flex-col">
               <div className="flex flex-row justify-between items-center h-[40px]">
                 <p className="text-style-3 text-[#FFFFFF] flex-1 min-w-0 truncate pr-[10px]">
                   {t('settings.keySoundOutput') || '키 사운드 출력'}
@@ -1067,9 +1114,19 @@ const Settings = ({
                       {
                         value: 'defaultDevice',
                         label:
-                          t('settings.keySoundOutputDefault') ||
-                          '기본 재생 장치',
+                          keySoundOutputError &&
+                          keySoundOutput?.requested.kind === 'defaultDevice'
+                            ? `⚠ ${keySoundOutputError}`
+                            : t('settings.keySoundOutputDefault') ||
+                              '기본 재생 장치',
                       },
+                      ...visibleSystemDevices.map((device) => ({
+                        value: `device:${device.id}`,
+                        label:
+                          device.name.length > 20
+                            ? `${device.name.slice(0, 20)}…`
+                            : device.name,
+                      })),
                       ...visibleAsioDrivers.map((name) => {
                         // 선택한 ASIO가 열기 실패하면 라벨에 ⚠ + 사유 표시 (인라인 경고 대신)
                         const failed =
@@ -1090,7 +1147,9 @@ const Settings = ({
                     value={
                       keySoundOutput?.requested.kind === 'asio'
                         ? `asio:${keySoundOutput.requested.driverName}`
-                        : 'defaultDevice'
+                        : keySoundOutput?.requested.kind === 'device'
+                          ? `device:${keySoundOutput.requested.id}`
+                          : 'defaultDevice'
                     }
                     onChange={handleKeySoundOutputChange}
                     placeholder={
@@ -1099,7 +1158,9 @@ const Settings = ({
                     align="right"
                     widthClass="max-w-[160px]"
                     disabled={
-                      asioDriversLoaded && visibleAsioDrivers.length === 0
+                      asioDriversLoaded &&
+                      visibleAsioDrivers.length === 0 &&
+                      visibleSystemDevices.length === 0
                     }
                   />
                 </div>
@@ -1129,7 +1190,7 @@ const Settings = ({
               </div>
             </div>
             {/* 기타 설정 */}
-            <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
+            <div className="dmn-setting-card flex flex-col">
               <div className="flex flex-row justify-between items-center h-[40px]">
                 <p className="text-style-3 text-[#FFFFFF]">
                   {t('settings.language')}
@@ -1147,7 +1208,7 @@ const Settings = ({
                   {t('settings.shortcuts')}
                 </p>
                 <button
-                  onClick={() => setShortcutModalOpen(true)}
+                  onClick={() => setActiveSettingsPanel('shortcuts')}
                   className={actionButtonClass(true)}
                 >
                   {t('settings.configure')}
@@ -1195,6 +1256,178 @@ const Settings = ({
             </div>
           </div>
         </div>
+      </div>
+      <div className="dmn-settings-detail absolute bottom-[12px] left-[372px] right-[12px] top-[12px] overflow-hidden">
+        {!activeSettingsPanel && (
+          <div className="dmn-settings-preview" aria-label="Settings overview">
+            <div className="dmn-settings-preview__mark" aria-hidden="true">
+              DM
+            </div>
+            <div>
+              <h2>ImplDmNote</h2>
+              <p>Manage the key viewer and editing environment in one place.</p>
+            </div>
+            <div className="dmn-settings-preview__actions">
+              <button
+                type="button"
+                onClick={() => setActiveSettingsPanel('css')}
+              >
+                CSS
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSettingsPanel('plugins')}
+              >
+                Plugins
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSettingsPanel('shortcuts')}
+              >
+                Shortcuts
+              </button>
+            </div>
+          </div>
+        )}
+        {activeSettingsPanel === 'css' && (
+          <SettingsSidePanel
+            title={t('settings.customCSS') || 'Custom CSS'}
+            onClose={() => setActiveSettingsPanel(null)}
+          >
+            <div className="dmn-settings-panel-card">
+              <div className="dmn-settings-panel-row">
+                <div>
+                  <strong>{t('settings.customCSS')}</strong>
+                  <span>{customCSSPath || t('settings.noCssFile')}</span>
+                </div>
+                <Checkbox
+                  checked={useCustomCSS}
+                  onChange={handleToggleCustomCSS}
+                />
+              </div>
+              <Button
+                variant="secondary"
+                block
+                disabled={!useCustomCSS}
+                onClick={handleLoadCustomCSS}
+              >
+                {t('settings.loadCss')}
+              </Button>
+              {cssHistory.length > 0 && (
+                <div className="flex flex-col gap-[6px] pt-[4px]">
+                  <strong>{t('settings.cssHistory')}</strong>
+                  {cssHistory.map((entry) => (
+                    <div
+                      key={entry.path}
+                      className="flex items-center gap-[6px]"
+                    >
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 truncate text-left text-style-1 text-[#DBDEE8] hover:text-white"
+                        title={entry.path}
+                        onClick={() => void activateCssHistory(entry.path)}
+                      >
+                        {entry.path.split(/[/\\]/).pop()}
+                      </button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={async () => {
+                          await window.api.css.history.remove(entry.path);
+                          setCssHistory(await window.api.css.history.list());
+                        }}
+                      >
+                        {t('tabCss.remove')}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </SettingsSidePanel>
+        )}
+        {activeSettingsPanel === 'plugins' && (
+          <SettingsSidePanel
+            title={t('settings.managePlugins') || 'Plugins'}
+            badge={<span className="dmn-panel-badge">{jsPlugins.length}</span>}
+            onClose={() => setActiveSettingsPanel(null)}
+          >
+            <div className="dmn-settings-panel-card">
+              <div className="dmn-settings-panel-row">
+                <div>
+                  <strong>{t('settings.customJS')}</strong>
+                  <span>{t('settings.pluginSecurityWarning')}</span>
+                </div>
+                <Checkbox
+                  checked={useCustomJS}
+                  onChange={handleToggleCustomJS}
+                />
+              </div>
+              <div className="dmn-settings-panel-list">
+                {jsPlugins.length === 0 ? (
+                  <p className="dmn-panel-empty">
+                    {t('settings.jsReloadNoPlugins')}
+                  </p>
+                ) : (
+                  jsPlugins.map((plugin) => (
+                    <div className="dmn-settings-panel-row" key={plugin.id}>
+                      <div className="min-w-0">
+                        <strong className="truncate">{plugin.name}</strong>
+                        <span className="truncate">
+                          {plugin.path || plugin.id}
+                        </span>
+                      </div>
+                      <Checkbox
+                        checked={plugin.enabled}
+                        onChange={() =>
+                          void handlePluginToggle(plugin.id, !plugin.enabled)
+                        }
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="flex gap-[8px]">
+                <Button
+                  variant="secondary"
+                  block
+                  loading={isReloadingPlugins}
+                  disabled={!canReloadPlugins}
+                  onClick={() => void handleReloadPlugins()}
+                >
+                  {t('settings.reloadPlugins')}
+                </Button>
+                <Button variant="primary" block onClick={handleOpenPluginModal}>
+                  {t('settings.managePlugins')}
+                </Button>
+              </div>
+            </div>
+          </SettingsSidePanel>
+        )}
+        {activeSettingsPanel === 'shortcuts' && (
+          <SettingsSidePanel
+            title={t('settings.shortcuts') || 'Shortcuts'}
+            badge={
+              <span className="dmn-panel-badge">
+                {Object.keys(shortcuts).length}
+              </span>
+            }
+            onClose={() => setActiveSettingsPanel(null)}
+          >
+            <div className="dmn-settings-panel-card">
+              <p className="dmn-panel-help">
+                Review and edit the shortcuts used by the current profile.
+              </p>
+              <Button
+                variant="primary"
+                block
+                onClick={() => setShortcutModalOpen(true)}
+              >
+                {t('settings.configure')}
+              </Button>
+            </div>
+          </SettingsSidePanel>
+        )}
       </div>
       {isPluginModalOpen && (
         <PluginManagerModal

@@ -5,7 +5,7 @@ import {
   createCubicBezierEasing,
 } from '@utils/cubicBezier';
 
-interface CountDisplayProps {
+export interface CountDisplayProps {
   count: number;
   fillColor?: string;
   strokeColor?: string;

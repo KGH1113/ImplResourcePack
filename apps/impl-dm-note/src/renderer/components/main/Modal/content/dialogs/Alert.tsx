@@ -3,6 +3,7 @@ import { useLenis } from '@hooks/useLenis';
 import { useTranslation } from '@contexts/useTranslation';
 import Modal from '../../Modal';
 import { getScrollShadowState } from '@utils/grid/scrollShadow';
+import Button from '@components/main/common/Button';
 
 interface AlertProps {
   isOpen: boolean;
@@ -132,21 +133,17 @@ const Alert = ({
             !shouldShowCancel ? 'justify-center' : ''
           } gap-[10.5px] mt-[19px] pr-[14px]`}
         >
-          <button
+          <Button
             onClick={onConfirm}
-            className={`w-${
-              shouldShowCancel ? '[150px]' : 'full'
-            } h-[30px] bg-[#2A2A30] hover:bg-[#303036] active:bg-[#393941] rounded-[7px] text-[#DCDEE7] text-style-3`}
+            variant="primary"
+            className={shouldShowCancel ? 'w-[150px]' : 'w-full'}
           >
             {confirmLabel}
-          </button>
+          </Button>
           {shouldShowCancel && (
-            <button
-              onClick={onCancel}
-              className="w-[75px] h-[30px] bg-[#3C1E1E] hover:bg-[#442222] active:bg-[#522929] rounded-[7px] text-[#E6DBDB] text-style-3"
-            >
+            <Button onClick={onCancel} variant="danger" className="w-[75px]">
               {cancelLabel}
-            </button>
+            </Button>
           )}
         </div>
       </div>

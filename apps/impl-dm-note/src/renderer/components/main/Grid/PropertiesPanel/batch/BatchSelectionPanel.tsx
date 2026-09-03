@@ -1,4 +1,5 @@
 import React from 'react';
+import { PANEL_ROOT_CLASS } from '../panelChrome';
 import type {
   KeyPosition,
   NoteColor,
@@ -516,14 +517,11 @@ export const BatchKeyLikePanel: React.FC<BatchKeyLikePanelProps> = ({
   };
 
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
       {/* 헤더 + 탭 영역 */}
-      <div className="flex-shrink-0 border-b border-[#3A3943]">
+      <div className="dmn-properties-panel__head-stack flex-shrink-0">
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-[12px] pb-[8px]">
+        <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
           <div className="flex items-center gap-[8px]">
             {selectedGroupInfo ? (
               isRenaming ? (
@@ -1098,12 +1096,9 @@ export const BatchGraphOnlyPanel: React.FC<BatchGraphOnlyPanelProps> = ({
   const batchGraphSpacing = getBatchSpacingValue();
 
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
-      <div className="flex-shrink-0 border-b border-[#3A3943]">
-        <div className="flex items-center justify-between p-[12px] pb-[8px]">
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
+      <div className="dmn-properties-panel__head-stack flex-shrink-0">
+        <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
           <div className="flex items-center gap-[8px]">
             {selectedGroupInfo ? (
               isRenaming ? (
@@ -1466,12 +1461,9 @@ export const BatchKnobOnlyPanel: React.FC<BatchKnobOnlyPanelProps> = ({
   const batchKnobSpacing = getBatchSpacingValue();
 
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
-      <div className="flex-shrink-0 border-b border-[#3A3943]">
-        <div className="flex items-center justify-between p-[12px] pb-[8px]">
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
+      <div className="dmn-properties-panel__head-stack flex-shrink-0">
+        <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
           <div className="flex items-center gap-[8px]">
             {selectedGroupInfo ? (
               isRenaming ? (

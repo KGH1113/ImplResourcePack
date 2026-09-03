@@ -2,7 +2,7 @@ import '@api/dmnoteApi';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nProvider } from '@contexts/I18nContext';
-import '@styles/global.css';
+import '@styles/viewer-compat-v1.css';
 
 window.__dmn_window_type = 'overlay';
 
@@ -10,6 +10,7 @@ async function bootstrap() {
   try {
     const { default: App } = await import('./App');
     const container = document.getElementById('root')!;
+    container.dataset.dmnViewerSurface = '';
     const root = createRoot(container);
     root.render(
       <I18nProvider>

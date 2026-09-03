@@ -16,6 +16,11 @@ mcp.json
 
 tasks/
 
+# Playwright local reports and failure artifacts (committed baselines live in tests/)
+.playwright-cli/
+playwright-report/
+test-results/
+
 # --- C# / Visual Studio (UWP) ---
 [Bb]in/
 [Oo]bj/

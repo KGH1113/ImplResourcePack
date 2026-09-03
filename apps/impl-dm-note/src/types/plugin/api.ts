@@ -81,6 +81,16 @@ export type CssLoadResult = {
   content?: string;
   path?: string;
 };
+export type CustomCssHistoryEntry = {
+  path: string;
+  loadedAt: number;
+  lastUsedAt: number;
+};
+export type CssHistoryMutationResult = {
+  success: boolean;
+  error?: string;
+  css?: CustomCss;
+};
 
 // 폰트 타입
 export type FontLoadResult = {
@@ -263,6 +273,10 @@ export type TabDeleteResult = {
   selected: string;
   error?: string;
 };
+export type TabMutationResult = {
+  result?: TabsChangePayload;
+  error?: string;
+};
 export type KeyCounterUpdate = { mode: string; key: string; count: number };
 
 export type PresetOperationResult = { success: boolean; error?: string };
@@ -277,6 +291,7 @@ export type PresetSnapshot = {
   selectedViewerTabs: SelectedViewerTabs;
   selectedKeyType: string;
   tabNoteOverrides: import('@src/types/settings/noteSettings').TabNoteOverrides;
+  tabCssOverrides: import('@src/types/plugin/css').TabCssOverrides;
 };
 export type BridgeMessage<T = unknown> = { type: string; data?: T };
 export type BridgeMessageListener<T = unknown> = (data: T) => void;
@@ -770,6 +785,15 @@ export interface DMNoteAPI {
     tabs: {
       list(viewerKind: KeyViewerKind): Promise<KeyViewerTab[]>;
       create(viewerKind: KeyViewerKind, name: string): Promise<TabResult>;
+      rename(
+        viewerKind: KeyViewerKind,
+        id: string,
+        name: string,
+      ): Promise<TabMutationResult>;
+      reorder(
+        viewerKind: KeyViewerKind,
+        orderedIds: string[],
+      ): Promise<TabMutationResult>;
       delete(id: string): Promise<TabDeleteResult>;
       select(viewerKind: KeyViewerKind, id: string): Promise<TabDeleteResult>;
       restore(
@@ -834,6 +858,11 @@ export interface DMNoteAPI {
     load(): Promise<CssLoadResult>;
     setContent(content: string): Promise<CssSetContentResult>;
     reset(): Promise<void>;
+    history: {
+      list(): Promise<CustomCssHistoryEntry[]>;
+      activate(path: string): Promise<CssHistoryMutationResult>;
+      remove(path: string): Promise<CssHistoryMutationResult>;
+    };
     onUse(listener: (payload: CssTogglePayload) => void): Unsubscribe;
     onContent(listener: (payload: CustomCss) => void): Unsubscribe;
     // 탭별 CSS API
@@ -841,6 +870,8 @@ export interface DMNoteAPI {
       getAll(): Promise<import('@src/types/plugin/css').TabCssOverrides>;
       get(tabId: string): Promise<TabCssResponse>;
       load(tabId: string): Promise<TabCssLoadResult>;
+      applyHistory(tabId: string, path: string): Promise<TabCssLoadResult>;
+      export(tabId: string): Promise<CssSetContentResult>;
       clear(tabId: string): Promise<TabCssClearResult>;
       set(
         tabId: string,
@@ -848,6 +879,11 @@ export interface DMNoteAPI {
       ): Promise<TabCssSetResult>;
       toggle(tabId: string, enabled: boolean): Promise<TabCssToggleResult>;
       onChanged(listener: (payload: TabCssResponse) => void): Unsubscribe;
+      onChangedAll(
+        listener: (
+          payload: import('@src/types/plugin/css').TabCssOverrides,
+        ) => void,
+      ): Unsubscribe;
     };
   };
   noteTab: {

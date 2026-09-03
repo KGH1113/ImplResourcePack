@@ -4,6 +4,7 @@ use std::{
     io::ErrorKind,
     num::NonZero,
     path::Path,
+    str::FromStr,
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc::{self, Receiver, Sender},
@@ -187,6 +188,10 @@ impl Default for KeySoundStatus {
 pub enum KeySoundOutputBackend {
     #[default]
     DefaultDevice,
+    Device {
+        id: String,
+        name: String,
+    },
     Asio {
         driver_name: String,
         /// ASIO 버퍼 크기(프레임). None이면 기본 64 고정
@@ -200,6 +205,10 @@ impl KeySoundOutputBackend {
     fn normalized(self) -> Self {
         match self {
             Self::DefaultDevice => Self::DefaultDevice,
+            Self::Device { id, name } => Self::Device {
+                id: id.trim().to_string(),
+                name: name.trim().to_string(),
+            },
             Self::Asio {
                 driver_name,
                 buffer_size,
@@ -237,7 +246,15 @@ impl Default for KeySoundOutputState {
 #[serde(rename_all = "camelCase")]
 pub struct KeySoundOutputDevices {
     pub default_device: bool,
+    pub system: Vec<KeySoundOutputDevice>,
     pub asio: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct KeySoundOutputDevice {
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -292,12 +309,17 @@ impl Default for KeySoundEngine {
 
 impl KeySoundEngine {
     pub fn new() -> Self {
-        Self::with_output_backend(KeySoundOutputBackend::DefaultDevice)
+        Self::with_output_backend(KeySoundOutputBackend::DefaultDevice, Arc::new(|_, _| {}))
     }
 
     /// 초기 출력 백엔드를 지정해 생성. 오디오 스레드가 처음부터 이 백엔드로 스트림을 열어
     /// "기본 장치 → ASIO" 전환에서 발생하던 깜빡임을 제거한다.
-    pub fn with_output_backend(backend: KeySoundOutputBackend) -> Self {
+    pub fn with_output_backend(
+        backend: KeySoundOutputBackend,
+        fallback_callback: Arc<
+            dyn Fn(KeySoundOutputBackend, KeySoundOutputBackend) + Send + Sync + 'static,
+        >,
+    ) -> Self {
         let (sender, receiver) = mpsc::channel();
         let output_state = KeySoundOutputState {
             requested: backend,
@@ -313,7 +335,7 @@ impl KeySoundEngine {
         }));
         let state_for_thread = state.clone();
 
-        thread::spawn(move || audio_thread(receiver, state_for_thread));
+        thread::spawn(move || audio_thread(receiver, state_for_thread, fallback_callback));
 
         Self { sender, state }
     }
@@ -329,6 +351,7 @@ impl KeySoundEngine {
     pub fn list_output_devices(&self) -> KeySoundOutputDevices {
         KeySoundOutputDevices {
             default_device: true,
+            system: list_system_output_devices(),
             asio: list_asio_drivers(),
         }
     }
@@ -457,7 +480,13 @@ impl KeySoundEngine {
     }
 }
 
-fn audio_thread(receiver: Receiver<AudioCommand>, state: Arc<RwLock<KeySoundRuntimeState>>) {
+fn audio_thread(
+    receiver: Receiver<AudioCommand>,
+    state: Arc<RwLock<KeySoundRuntimeState>>,
+    fallback_callback: Arc<
+        dyn Fn(KeySoundOutputBackend, KeySoundOutputBackend) + Send + Sync + 'static,
+    >,
+) {
     #[cfg(any(target_os = "windows", target_os = "macos"))]
     {
         use thread_priority::{set_current_thread_priority, ThreadPriority};
@@ -471,7 +500,11 @@ fn audio_thread(receiver: Receiver<AudioCommand>, state: Arc<RwLock<KeySoundRunt
     let mut latency_logging = state.read().status.latency_logging;
     let mut requested_backend = state.read().output_state.requested.clone();
     let mut stream_handler = None;
-    let output_state = switch_output_backend(requested_backend.clone(), &mut stream_handler);
+    let output_state = switch_output_backend_with_notification(
+        requested_backend.clone(),
+        &mut stream_handler,
+        fallback_callback.as_ref(),
+    );
     requested_backend = output_state.requested.clone();
     state.write().output_state = output_state;
     let mut file_cache: HashMap<String, Arc<CachedAudioClip>> = HashMap::new();
@@ -533,8 +566,9 @@ fn audio_thread(receiver: Receiver<AudioCommand>, state: Arc<RwLock<KeySoundRunt
                     &mut stream_handler,
                     source,
                     volume,
-                    &requested_backend,
+                    &mut requested_backend,
                     &state,
+                    fallback_callback.as_ref(),
                 ) {
                     continue;
                 }
@@ -620,8 +654,9 @@ fn audio_thread(receiver: Receiver<AudioCommand>, state: Arc<RwLock<KeySoundRunt
                     &mut stream_handler,
                     source,
                     final_volume,
-                    &requested_backend,
+                    &mut requested_backend,
                     &state,
+                    fallback_callback.as_ref(),
                 ) {
                     continue;
                 }
@@ -682,6 +717,8 @@ const ERROR_CODE_ASIO_UNAVAILABLE_BUILD: &str = "asioUnavailableBuild";
 const ERROR_CODE_ASIO_DEVICE_NOT_FOUND: &str = "asioDeviceNotFound";
 const ERROR_CODE_ASIO_OPEN_FAILED: &str = "asioOpenFailed";
 const ERROR_CODE_DEFAULT_OPEN_FAILED: &str = "defaultOpenFailed";
+const ERROR_CODE_DEVICE_NOT_FOUND: &str = "deviceNotFound";
+const ERROR_CODE_DEVICE_OPEN_FAILED: &str = "deviceOpenFailed";
 
 #[derive(Debug)]
 enum AudioSinkOpenError {
@@ -689,6 +726,7 @@ enum AudioSinkOpenError {
     AsioUnavailableBuild,
     #[cfg_attr(not(all(windows, feature = "asio-backend")), allow(dead_code))]
     AsioDeviceNotFound,
+    DeviceNotFound,
     OpenFailed(anyhow::Error),
 }
 
@@ -697,7 +735,7 @@ type AudioSinkResult<T> = std::result::Result<T, AudioSinkOpenError>;
 impl fmt::Display for AudioSinkOpenError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::AsioUnavailableBuild | Self::AsioDeviceNotFound => {
+            Self::AsioUnavailableBuild | Self::AsioDeviceNotFound | Self::DeviceNotFound => {
                 write!(f, "{}", audio_sink_error_message(self))
             }
             Self::OpenFailed(err) => write!(f, "{err:#}"),
@@ -761,12 +799,18 @@ fn switch_output_backend(
                     error_code: Some(ERROR_CODE_DEFAULT_OPEN_FAILED.to_string()),
                     asio_available: asio_backend_available(),
                 },
-                KeySoundOutputBackend::Asio {
-                    driver_name,
-                    buffer_size,
-                } => {
-                    let mut error = asio_output_error_message(&err).to_string();
-                    let mut error_code = asio_output_error_code(&err).to_string();
+                requested => {
+                    let (mut error, mut error_code) = match &requested {
+                        KeySoundOutputBackend::Device { .. } => (
+                            device_output_error_message(&err).to_string(),
+                            device_output_error_code(&err).to_string(),
+                        ),
+                        KeySoundOutputBackend::Asio { .. } => (
+                            asio_output_error_message(&err).to_string(),
+                            asio_output_error_code(&err).to_string(),
+                        ),
+                        KeySoundOutputBackend::DefaultDevice => unreachable!(),
+                    };
                     if let Err(default_err) = open_audio_sink(&KeySoundOutputBackend::DefaultDevice)
                         .map(|handler| {
                             *stream_handler = Some(handler);
@@ -778,10 +822,7 @@ fn switch_output_backend(
                     }
 
                     KeySoundOutputState {
-                        requested: KeySoundOutputBackend::Asio {
-                            driver_name,
-                            buffer_size,
-                        },
+                        requested: KeySoundOutputBackend::DefaultDevice,
                         effective: KeySoundOutputBackend::DefaultDevice,
                         error: Some(error),
                         error_code: Some(error_code),
@@ -797,6 +838,7 @@ fn audio_sink_error_message(err: &AudioSinkOpenError) -> &'static str {
     match err {
         AudioSinkOpenError::AsioUnavailableBuild => "ASIO 미지원 빌드",
         AudioSinkOpenError::AsioDeviceNotFound => "ASIO 장치를 찾을 수 없습니다",
+        AudioSinkOpenError::DeviceNotFound => "출력 장치를 찾을 수 없습니다",
         AudioSinkOpenError::OpenFailed(_) => "오디오 출력 장치를 열 수 없습니다",
     }
 }
@@ -816,18 +858,73 @@ fn asio_output_error_code(err: &AudioSinkOpenError) -> &'static str {
     match err {
         AudioSinkOpenError::AsioUnavailableBuild => ERROR_CODE_ASIO_UNAVAILABLE_BUILD,
         AudioSinkOpenError::AsioDeviceNotFound => ERROR_CODE_ASIO_DEVICE_NOT_FOUND,
+        AudioSinkOpenError::DeviceNotFound => ERROR_CODE_ASIO_DEVICE_NOT_FOUND,
         AudioSinkOpenError::OpenFailed(_) => ERROR_CODE_ASIO_OPEN_FAILED,
     }
+}
+
+fn device_output_error_message(err: &AudioSinkOpenError) -> &'static str {
+    match err {
+        AudioSinkOpenError::DeviceNotFound => "출력 장치를 찾을 수 없어 기본 출력으로 재생합니다",
+        AudioSinkOpenError::OpenFailed(_) => "출력 장치를 열 수 없어 기본 출력으로 재생합니다",
+        _ => audio_sink_error_message(err),
+    }
+}
+
+fn device_output_error_code(err: &AudioSinkOpenError) -> &'static str {
+    match err {
+        AudioSinkOpenError::DeviceNotFound => ERROR_CODE_DEVICE_NOT_FOUND,
+        _ => ERROR_CODE_DEVICE_OPEN_FAILED,
+    }
+}
+
+fn switch_output_backend_with_notification(
+    backend: KeySoundOutputBackend,
+    stream_handler: &mut Option<StreamHandler>,
+    fallback_callback: &(dyn Fn(KeySoundOutputBackend, KeySoundOutputBackend) + Send + Sync),
+) -> KeySoundOutputState {
+    let failed = backend.clone();
+    let non_default = !matches!(backend, KeySoundOutputBackend::DefaultDevice);
+    let state = switch_output_backend(backend, stream_handler);
+    if non_default && matches!(state.requested, KeySoundOutputBackend::DefaultDevice) {
+        fallback_callback(failed, state.requested.clone());
+    }
+    state
 }
 
 fn open_audio_sink(backend: &KeySoundOutputBackend) -> AudioSinkResult<StreamHandler> {
     match backend {
         KeySoundOutputBackend::DefaultDevice => open_default_audio_sink(),
+        KeySoundOutputBackend::Device { id, name } => open_system_device_audio_sink(id, name),
         KeySoundOutputBackend::Asio {
             driver_name,
             buffer_size,
         } => open_asio_audio_sink(driver_name, *buffer_size),
     }
+}
+
+fn open_system_device_audio_sink(id: &str, _stored_name: &str) -> AudioSinkResult<StreamHandler> {
+    use cpal::traits::{DeviceTrait, HostTrait};
+
+    let device_id = cpal::DeviceId::from_str(id).map_err(|_| AudioSinkOpenError::DeviceNotFound)?;
+    let device = cpal::default_host()
+        .device_by_id(&device_id)
+        .ok_or(AudioSinkOpenError::DeviceNotFound)?;
+    let config = device
+        .default_output_config()
+        .map_err(|err| AudioSinkOpenError::OpenFailed(anyhow::Error::new(err)))?;
+    if config.sample_rate() == 0 || config.channels() == 0 {
+        return Err(AudioSinkOpenError::OpenFailed(anyhow::anyhow!(
+            "invalid output configuration"
+        )));
+    }
+    let (error, callback) = stream_error_callback("system stream");
+    let sink = DeviceSinkBuilder::from_device(device)
+        .map_err(|err| AudioSinkOpenError::OpenFailed(anyhow::Error::new(err)))?
+        .with_error_callback(callback)
+        .open_sink_or_fallback()
+        .map_err(|err| AudioSinkOpenError::OpenFailed(anyhow::Error::new(err)))?;
+    Ok(StreamHandler { sink, error })
 }
 
 fn open_default_audio_sink() -> AudioSinkResult<StreamHandler> {
@@ -985,19 +1082,55 @@ fn list_asio_drivers() -> Vec<String> {
     Vec::new()
 }
 
+fn list_system_output_devices() -> Vec<KeySoundOutputDevice> {
+    use cpal::traits::{DeviceTrait, HostTrait};
+
+    let Ok(devices) = cpal::default_host().output_devices() else {
+        return Vec::new();
+    };
+    let mut by_id = HashMap::new();
+    for device in devices {
+        let Ok(id) = device.id().map(|id| id.to_string()) else {
+            continue;
+        };
+        match device.default_output_config() {
+            Ok(config) if config.sample_rate() > 0 && config.channels() > 0 => {}
+            _ => continue,
+        }
+        let name = device
+            .description()
+            .ok()
+            .map(|description| description.name().trim().to_string())
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| id.clone());
+        by_id
+            .entry(id.clone())
+            .or_insert(KeySoundOutputDevice { id, name });
+    }
+    let mut devices: Vec<_> = by_id.into_values().collect();
+    devices.sort_by(|left, right| left.name.cmp(&right.name).then(left.id.cmp(&right.id)));
+    devices
+}
+
 fn play_on_stream(
     stream_handler: &mut Option<StreamHandler>,
     source: AudioSource,
     volume: f32,
-    requested_backend: &KeySoundOutputBackend,
+    requested_backend: &mut KeySoundOutputBackend,
     state: &Arc<RwLock<KeySoundRuntimeState>>,
+    fallback_callback: &(dyn Fn(KeySoundOutputBackend, KeySoundOutputBackend) + Send + Sync),
 ) -> bool {
     // 장치 에러 또는 스트림 없음 → 재연결
     if stream_handler
         .as_ref()
         .is_none_or(|h| h.error.load(Ordering::Acquire))
     {
-        let output_state = switch_output_backend(requested_backend.clone(), stream_handler);
+        let output_state = switch_output_backend_with_notification(
+            requested_backend.clone(),
+            stream_handler,
+            fallback_callback,
+        );
+        *requested_backend = output_state.requested.clone();
         state.write().output_state = output_state;
     }
 
@@ -1397,5 +1530,37 @@ impl SoundDecoder {
         }
 
         Ok(samples)
+    }
+}
+
+#[cfg(test)]
+mod output_backend_tests {
+    use super::KeySoundOutputBackend;
+
+    #[test]
+    fn system_device_backend_normalizes_stable_id_and_display_name() {
+        assert_eq!(
+            KeySoundOutputBackend::Device {
+                id: "  coreaudio:42  ".into(),
+                name: "  Speakers  ".into(),
+            }
+            .normalized(),
+            KeySoundOutputBackend::Device {
+                id: "coreaudio:42".into(),
+                name: "Speakers".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn system_device_backend_uses_tagged_camel_case_wire_contract() {
+        let json = serde_json::to_value(KeySoundOutputBackend::Device {
+            id: "device-id".into(),
+            name: "Device".into(),
+        })
+        .expect("serialize backend");
+        assert_eq!(json["kind"], "device");
+        assert_eq!(json["id"], "device-id");
+        assert_eq!(json["name"], "Device");
     }
 }

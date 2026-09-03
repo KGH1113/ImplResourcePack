@@ -129,6 +129,10 @@ export function useCustomCssInjection() {
         applyCssForCurrentTab();
       }
     });
+    const unsubAllTabCss = window.api.css.tab.onChangedAll((overrides) => {
+      tabCssOverridesRef.current = overrides;
+      applyCssForCurrentTab();
+    });
 
     // 탭 변경 구독 (zustand store)
     let prevSelectedKeyType = useKeyStore.getState().selectedKeyType;
@@ -144,6 +148,7 @@ export function useCustomCssInjection() {
       unsubGlobalUse();
       unsubGlobalContent();
       unsubTabCss();
+      unsubAllTabCss();
       unsubKeyStore();
     };
   }, []);

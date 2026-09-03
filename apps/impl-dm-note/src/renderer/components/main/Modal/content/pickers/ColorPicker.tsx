@@ -780,7 +780,7 @@ const ColorPickerWrapper = ({
     >
       <div
         ref={pickerContainerRef}
-        className="flex flex-col p-[8px] gap-[8px] w-[146px] bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30]"
+        className="dmn-picker-surface flex w-[146px] flex-col gap-[8px] p-[8px]"
       >
         {showStateSwitch && (
           <StateSwitch state={stateMode} onChange={onStateModeChange} />

@@ -1,5 +1,6 @@
 {
   "settings": {
+    "cssHistory": "Недавние файлы CSS",
     "overlayLock": "Закрепить оверлей",
     "alwaysOnTop": "Поверх всех окон",
     "noteEffect": "Эффекты нот",
@@ -25,6 +26,8 @@
     "keySoundOutputDefault": "По умолчанию",
     "keySoundOutputBuffer": "Размер буфера ASIO",
     "keySoundOutputError": {
+      "deviceNotFound": "Выбранное устройство недоступно; используется устройство по умолчанию.",
+      "deviceOpenFailed": "Не удалось открыть выбранное устройство; используется устройство по умолчанию.",
       "asioUnavailableBuild": "Эта сборка не поддерживает ASIO.",
       "asioDeviceNotFound": "Устройство ASIO не найдено.",
       "asioOpenFailed": "Не удалось открыть устройство ASIO, используется вывод по умолчанию.",
@@ -272,6 +275,9 @@
     "remove": "Удалить"
   },
   "tabs": {
+    "renameTitle": "Переименовать вкладку",
+    "rename": "Переименовать",
+    "reorder": "Изменить порядок {{name}}",
     "handViewer": "Клавиши для рук",
     "footViewer": "Клавиши для ног",
     "empty": "Нет доп. вкладок",
@@ -287,6 +293,7 @@
       "duplicate": "Имя занято"
     },
     "errors": {
+      "notFound": "Вкладка не найдена",
       "max": "Максимум 30 вкладок",
       "invalid": "Неверное имя",
       "createFail": "Ошибка создания"
@@ -420,6 +427,8 @@
     "cancel": "Отмена"
   },
   "tabCss": {
+    "history": "Недавние файлы CSS",
+    "export": "Экспорт CSS",
     "enableCss": "CSS вкладки",
     "cssFile": "Файл CSS",
     "noFile": "(CSS не выбран)",

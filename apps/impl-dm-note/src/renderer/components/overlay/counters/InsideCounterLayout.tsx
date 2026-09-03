@@ -4,11 +4,14 @@
  */
 
 import React from 'react';
+import type { Signal } from '@preact/signals-react';
 import CountDisplay from './CountDisplay';
+import SignalCountDisplay from './SignalCountDisplay';
 import type { KeyCounterSettings } from '@src/types/key/keys';
 
 interface InsideCounterLayoutProps {
-  count: number;
+  count?: number;
+  countSignal?: Signal<number>;
   labelText: string;
   textStyle: React.CSSProperties;
   active: boolean;
@@ -17,6 +20,7 @@ interface InsideCounterLayoutProps {
 
 const InsideCounterLayout = ({
   count,
+  countSignal,
   labelText,
   textStyle,
   active,
@@ -32,24 +36,30 @@ const InsideCounterLayout = ({
     ? counterSettings.gap
     : 6;
 
-  const counterElement = (
-    <CountDisplay
+  const counterProps = {
+    fillColor,
+    strokeColor,
+    active,
+    fontSize: counterSettings.fontSize,
+    fontFamily: counterSettings.fontFamily,
+    fontWeight: counterSettings.fontWeight,
+    fontItalic: counterSettings.fontItalic,
+    fontUnderline: counterSettings.fontUnderline,
+    fontStrikethrough: counterSettings.fontStrikethrough,
+    animationEnabled: counterSettings.animation.enabled,
+    animationBezier: counterSettings.animation.bezier,
+    animationScale: counterSettings.animation.scale,
+    animationDurationMs: counterSettings.animation.durationMs,
+  };
+
+  const counterElement = countSignal ? (
+    <SignalCountDisplay
       key="counter"
-      count={count}
-      fillColor={fillColor}
-      strokeColor={strokeColor}
-      active={active}
-      fontSize={counterSettings.fontSize}
-      fontFamily={counterSettings.fontFamily}
-      fontWeight={counterSettings.fontWeight}
-      fontItalic={counterSettings.fontItalic}
-      fontUnderline={counterSettings.fontUnderline}
-      fontStrikethrough={counterSettings.fontStrikethrough}
-      animationEnabled={counterSettings.animation.enabled}
-      animationBezier={counterSettings.animation.bezier}
-      animationScale={counterSettings.animation.scale}
-      animationDurationMs={counterSettings.animation.durationMs}
+      countSignal={countSignal}
+      {...counterProps}
     />
+  ) : (
+    <CountDisplay key="counter" count={count ?? 0} {...counterProps} />
   );
 
   const nameElement = (

@@ -196,6 +196,12 @@ impl CssWatcher {
         }
     }
 
+    /// 프리셋처럼 전체 CSS 맵이 교체된 뒤 감시 대상을 원자적으로 다시 구성합니다.
+    pub fn reload_from_store(&self) {
+        self.watchers.write().clear();
+        self.initialize_from_store();
+    }
+
     /// 모든 워칭 중지
     pub fn shutdown(&self) {
         let mut watchers = self.watchers.write();

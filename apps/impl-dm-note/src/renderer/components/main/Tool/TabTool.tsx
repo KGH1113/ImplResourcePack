@@ -30,7 +30,7 @@ const TabTool = () => {
 
   return (
     <TooltipGroup>
-      <div className="flex gap-[10px]">
+      <div className="flex gap-[8px]">
         {VIEWERS.map(({ kind, number }) => {
           const isOpen = openViewer === kind;
           const isActive = activeViewer === kind;
@@ -48,13 +48,13 @@ const TabTool = () => {
                   data-open={isOpen ? 'true' : 'false'}
                   data-selected={isActive ? 'true' : 'false'}
                   disabled={!isBootstrapped}
-                  className="viewer-tab-trigger relative flex h-[40px] w-[40px] items-center justify-center rounded-[7px] bg-button-primary p-[5px] text-[#DCDEE7] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="viewer-tab-trigger dmn-tool-group relative flex h-[40px] w-[40px] items-center justify-center p-[5px] text-ui-fg-secondary disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={() =>
                     setOpenViewer((current) => (current === kind ? null : kind))
                   }
                 >
                   <span
-                    className={`viewer-tab-trigger-surface flex h-[30px] w-[30px] items-center justify-center rounded-[7px] transition-colors duration-75 ${
+                    className={`viewer-tab-trigger-surface dmn-tool-button flex h-[30px] w-[30px] items-center justify-center ${
                       isOpen
                         ? 'bg-button-active'
                         : 'hover:bg-button-hover active:bg-button-active'
@@ -69,7 +69,7 @@ const TabTool = () => {
                   </span>
                   {isActive && (
                     <span
-                      className="viewer-tab-selected-dot absolute bottom-[1px] left-1/2 h-[4px] w-[4px] -translate-x-1/2 rounded-full bg-focus"
+                      className="viewer-tab-selected-dot absolute bottom-[1px] left-1/2 h-[4px] w-[4px] -translate-x-1/2 rounded-full bg-ui-accent"
                       aria-hidden="true"
                     />
                   )}

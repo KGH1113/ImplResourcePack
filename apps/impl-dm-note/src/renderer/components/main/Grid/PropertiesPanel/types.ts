@@ -48,6 +48,9 @@ export interface NumberInputProps {
   width?: string;
   allowDecimal?: boolean;
   decimalScale?: number;
+  step?: number;
+  ariaLabel?: string;
+  disabled?: boolean;
   isMixed?: boolean;
   mixedPlaceholder?: string;
 }
@@ -65,6 +68,9 @@ export interface OptionalNumberInputProps {
   allowNegative?: boolean;
   allowDecimal?: boolean;
   decimalScale?: number;
+  step?: number;
+  ariaLabel?: string;
+  disabled?: boolean;
   isMixed?: boolean;
   mixedPlaceholder?: string;
 }
@@ -105,6 +111,8 @@ export interface TextInputProps {
   placeholder?: string;
   width?: string;
   isMixed?: boolean;
+  ariaLabel?: string;
+  disabled?: boolean;
 }
 
 export interface TabButtonProps {

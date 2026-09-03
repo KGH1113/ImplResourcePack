@@ -258,12 +258,16 @@ SettingToolProps) => {
   };
 
   return (
-    <div className="flex gap-[10px]">
+    <div className="flex gap-[8px]">
       {!isSettingsOpen && (
         <TooltipGroup>
-          <div className="flex items-center h-[40px] p-[5px] bg-button-primary rounded-[7px] gap-[0px]">
+          <div className="dmn-tool-group flex h-[40px] items-center gap-0 p-[5px]">
             <FloatingTooltip content={t('tooltip.exportPreset')}>
-              <Button icon={<FolderIcon />} onClick={handlePresetSave} />
+              <Button
+                icon={<FolderIcon />}
+                ariaLabel={t('tooltip.exportPreset')}
+                onClick={handlePresetSave}
+              />
             </FloatingTooltip>
 
             <FloatingTooltip
@@ -272,6 +276,7 @@ SettingToolProps) => {
             >
               <ChevronButton
                 ref={exportImportRef}
+                ariaLabel={t('tooltip.importExport')}
                 isSelected={isExportImportOpen}
                 onClick={() => setIsExportImportOpen((prev) => !prev)}
               />
@@ -318,7 +323,7 @@ SettingToolProps) => {
         </TooltipGroup>
       )}
       <TooltipGroup>
-        <div className="flex items-center h-[40px] p-[5px] bg-button-primary rounded-[7px] gap-[5px]">
+        <div className="dmn-tool-group flex h-[40px] items-center gap-[2px] p-[5px]">
           <FloatingTooltip
             content={
               isObsModeActive
@@ -330,6 +335,11 @@ SettingToolProps) => {
           >
             <Button
               icon={isOverlayVisible ? <CloseEyeIcon /> : <OpenEyeIcon />}
+              ariaLabel={
+                isOverlayVisible
+                  ? t('tooltip.overlayClose')
+                  : t('tooltip.overlayOpen')
+              }
               onClick={isObsModeActive ? undefined : toggleOverlay}
               disabled={isObsModeActive}
             />
@@ -342,6 +352,9 @@ SettingToolProps) => {
             >
               <Button
                 icon={isSettingsOpen ? <TurnIcon /> : <SettingIcon />}
+                ariaLabel={
+                  isSettingsOpen ? t('tooltip.back') : t('tooltip.settings')
+                }
                 onClick={isSettingsOpen ? onCloseSettings : onOpenSettings}
               />
             </FloatingTooltip>
@@ -383,6 +396,7 @@ SettingToolProps) => {
 
 interface ButtonProps {
   icon: React.ReactNode;
+  ariaLabel: string;
   isSelected?: boolean;
   disabled?: boolean;
   onClick?: () => void;
@@ -390,6 +404,7 @@ interface ButtonProps {
 
 const Button = ({
   icon,
+  ariaLabel,
   isSelected = false,
   disabled = false,
   onClick,
@@ -397,8 +412,9 @@ const Button = ({
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       disabled={disabled}
-      className={`flex items-center justify-center h-[30px] w-[30px] rounded-[7px] transition-colors ${
+      className={`dmn-tool-button flex h-[30px] w-[30px] items-center justify-center ${
         disabled
           ? 'opacity-40 cursor-not-allowed'
           : `active:bg-button-active ${
@@ -415,17 +431,19 @@ const Button = ({
 };
 
 interface ChevronButtonProps {
+  ariaLabel: string;
   isSelected?: boolean;
   onClick?: () => void;
 }
 
 const ChevronButton = React.forwardRef<HTMLButtonElement, ChevronButtonProps>(
-  ({ isSelected = false, onClick }, ref) => {
+  ({ ariaLabel, isSelected = false, onClick }, ref) => {
     return (
       <button
         ref={ref}
         type="button"
-        className={`flex items-center justify-center h-[30px] w-[14px] rounded-[7px] transition-colors active:bg-button-active ${
+        aria-label={ariaLabel}
+        className={`dmn-tool-button flex h-[30px] w-[14px] items-center justify-center ${
           isSelected
             ? 'bg-button-active hover:bg-button-active'
             : 'bg-button-primary hover:bg-button-hover'

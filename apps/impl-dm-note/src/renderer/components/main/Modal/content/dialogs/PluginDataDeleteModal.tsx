@@ -23,7 +23,7 @@ export function PluginDataDeleteModal({
   return (
     <Modal onClick={onClose}>
       <div
-        className="flex flex-col w-[380px] bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30] p-[20px] gap-[16px]"
+        className="dmn-manager-surface flex w-[380px] flex-col gap-[16px] p-[18px]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex flex-col gap-[8px]">

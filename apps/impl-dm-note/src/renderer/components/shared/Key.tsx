@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from 'react';
-import { getKeySignal } from '@stores/signals/keySignals';
 import { getKeyCounterSignal } from '@stores/signals/keyCounterSignals';
 import { useSignals } from '@preact/signals-react/runtime';
 import { isMac } from '@utils/core/platform';
@@ -14,12 +13,12 @@ import { useSmartGuidesElements } from '@hooks/Grid';
 import { useSmartGuidesStore } from '@stores/grid/useSmartGuidesStore';
 import { useSettingsStore } from '@stores/useSettingsStore';
 import { useGridSelectionStore } from '@stores/grid/useGridSelectionStore';
-import { resolveImageSource } from '@utils/core/imageSource';
 import { warmupImageSource } from '@utils/core/imageWarmup';
 import {
   computeKeyElementStyles,
   type KeyElementPosition,
 } from '@hooks/overlay/useKeyElementStyles';
+import { useKeyActive } from '@hooks/overlay/useKeyActive';
 import InsideCounterLayout from '@components/overlay/counters/InsideCounterLayout';
 import CountDisplay from '@components/overlay/counters/CountDisplay';
 import {
@@ -108,34 +107,18 @@ const DraggableKey = React.memo(
 
     const macOS = isMac();
     const { displayName } = getKeyInfoByGlobalKey(keyName);
-    const {
-      dx,
-      dy,
-      width,
-      height = 60,
-      activeImage: _activeImage,
-      inactiveImage,
-      className,
-      backgroundColor,
-      borderColor,
-      borderWidth,
-      borderRadius,
-      fontSize,
-      fontColor,
-      fontFamily,
-      idleImageFit,
-      imageFit,
-      useInlineStyles,
-      displayText,
-      fontWeight,
-      fontItalic,
-      fontUnderline,
-      fontStrikethrough,
-      counter,
-    } = position;
+    const active = useKeyActive(keyName);
+    const { dx, dy, width, height = 60, className, counter } = position;
 
-    const labelText = displayText || displayName;
-    const inactiveImageSrc = resolveImageSource(inactiveImage);
+    const {
+      keyStyle: visualKeyStyle,
+      imageStyle,
+      textStyle,
+      currentImageSrc,
+      hasCurrentImage,
+      isTransparent,
+      labelText,
+    } = computeKeyElementStyles({ position, active, label: displayName });
 
     const counterSettings = normalizeCounterSettings(
       counter ?? createDefaultCounterSettings(),
@@ -453,79 +436,25 @@ const DraggableKey = React.memo(
     const renderDx = draggable.dx;
     const renderDy = draggable.dy;
 
-    const useInline = useInlineStyles === true;
     const shouldPromoteTransformLayer =
       isDraggingOrResizing || isViewportTransforming;
 
     const keyStyle = {
-      width: `${width}px`,
-      height: `${height}px`,
+      ...visualKeyStyle,
       transform: `translate(calc(${renderDx}px + var(--key-offset-x, 0px)), calc(${renderDy}px + var(--key-offset-y, 0px)))`,
-      backgroundColor:
-        useInline && backgroundColor
-          ? backgroundColor
-          : `var(--key-bg, ${
-              inactiveImageSrc
-                ? 'transparent'
-                : backgroundColor || 'rgba(46, 46, 47, 0.9)'
-            })`,
-      borderRadius:
-        useInline && borderRadius != null
-          ? `${borderRadius}px`
-          : `var(--key-radius, ${
-              borderRadius != null ? `${borderRadius}px` : '10px'
-            })`,
-      border:
-        useInline && (borderColor || borderWidth != null)
-          ? `${borderWidth ?? 3}px solid ${
-              borderColor || 'rgba(113, 113, 113, 0.9)'
-            }`
-          : `var(--key-border, ${borderWidth ?? 3}px solid ${
-              borderColor || 'rgba(113, 113, 113, 0.9)'
-            })`,
-      overflow: 'hidden' as const,
       willChange: shouldPromoteTransformLayer ? 'transform' : 'auto',
-      contain: 'layout style paint',
-      imageRendering: 'auto' as const,
-      isolation: 'isolate' as const,
-      boxSizing: 'border-box' as const,
       zIndex: position.zIndex ?? zIndex,
+      cursor: undefined,
     };
 
-    const effectiveImageFit = idleImageFit || imageFit || 'cover';
-    const imageStyle = {
-      width: '100%',
-      height: '100%',
-      objectFit: effectiveImageFit as React.CSSProperties['objectFit'],
-      display: 'block' as const,
-      pointerEvents: 'none' as const,
-      userSelect: 'none' as const,
-    };
+    if (position?.hidden || isTransparent) return null;
 
-    const textDecorations: string[] = [];
-    if (fontUnderline) textDecorations.push('underline');
-    if (fontStrikethrough) textDecorations.push('line-through');
-
-    const textStyle = {
-      willChange: 'auto',
-      color:
-        useInline && fontColor
-          ? fontColor
-          : `var(--key-text-color, ${fontColor || 'rgba(121, 121, 121, 0.9)'})`,
-      fontSize: fontSize ? `${fontSize}px` : undefined,
-      fontFamily: fontFamily
-        ? `"${fontFamily}", "SUIT-Regular", sans-serif`
-        : undefined,
-      fontWeight: fontWeight ?? 700,
-      fontStyle: fontItalic ? 'italic' : 'normal',
-      textDecoration:
-        textDecorations.length > 0 ? textDecorations.join(' ') : 'none',
-    };
-
-    if (position?.hidden) return null;
-
-    const counterFillColor = counterSettings.fill.idle;
-    const counterStrokeColor = counterSettings.stroke.idle;
+    const counterFillColor = active
+      ? counterSettings.fill.active
+      : counterSettings.fill.idle;
+    const counterStrokeColor = active
+      ? counterSettings.stroke.active
+      : counterSettings.stroke.idle;
     const contentGap = Number.isFinite(counterSettings.gap)
       ? counterSettings.gap
       : 6;
@@ -618,7 +547,7 @@ const DraggableKey = React.memo(
           draggable && draggable.wasMoved ? '' : ''
         } ${className || ''}`}
         style={keyStyle}
-        data-state="inactive"
+        data-state={active ? 'active' : 'inactive'}
         data-editing={isDraggingOrResizing ? 'true' : undefined}
         data-key-element="true"
         onClick={handleClick}
@@ -626,9 +555,9 @@ const DraggableKey = React.memo(
         onContextMenu={handleContextMenu}
         onDragStart={(e) => e.preventDefault()}
       >
-        {inactiveImageSrc ? (
+        {hasCurrentImage ? (
           <img
-            src={inactiveImageSrc}
+            src={currentImageSrc || ''}
             alt=""
             style={imageStyle}
             draggable={false}
@@ -657,9 +586,8 @@ export const Key = React.memo(function Key({
   mode,
   counterEnabled = false,
 }: KeyProps) {
-  useSignals();
   const selectorKey = globalKey || keyName;
-  const active = getKeySignal(selectorKey).value;
+  const active = useKeyActive(selectorKey);
 
   const {
     keyStyle,
@@ -691,7 +619,6 @@ export const Key = React.memo(function Key({
   const counterSignal = showInsideCounter
     ? getKeyCounterSignal(mode ?? '', globalKey)
     : undefined;
-  const counterValue = counterSignal?.value ?? 0;
 
   return (
     <div
@@ -706,9 +633,9 @@ export const Key = React.memo(function Key({
           style={imageStyle}
           draggable={false}
         />
-      ) : showInsideCounter ? (
+      ) : showInsideCounter && counterSignal ? (
         <InsideCounterLayout
-          count={counterValue}
+          countSignal={counterSignal}
           labelText={labelText}
           textStyle={textStyle}
           active={active}

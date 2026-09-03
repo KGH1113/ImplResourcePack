@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Modal from '../../Modal';
 import { useTranslation } from '@contexts/useTranslation';
+import Button from '@components/main/common/Button';
 
 interface TabNameModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface TabNameModalProps {
     name: string,
   ) => Promise<{ error?: string } | void> | { error?: string } | void;
   existingNames?: string[];
+  initialName?: string;
+  mode?: 'create' | 'rename';
 }
 
 const TabNameModal = ({
@@ -16,6 +19,8 @@ const TabNameModal = ({
   onClose,
   onSubmit,
   existingNames = [],
+  initialName = '',
+  mode = 'create',
 }: TabNameModalProps) => {
   const { t } = useTranslation();
   const [name, setName] = useState('');
@@ -23,10 +28,10 @@ const TabNameModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      setName('');
+      setName(initialName);
       setError(null);
     }
-  }, [isOpen]);
+  }, [initialName, isOpen]);
 
   const validate = (() => {
     return (v: string) => {
@@ -49,6 +54,8 @@ const TabNameModal = ({
         'max-reached': t('tabs.errors.max'),
         'duplicate-name': t('tabs.name.duplicate'),
         'invalid-name': t('tabs.errors.invalid'),
+        'name-too-long': t('tabs.name.max'),
+        'not-found': t('tabs.errors.notFound'),
       };
       setError(map[res.error] || t('tabs.errors.createFail'));
       return;
@@ -65,7 +72,7 @@ const TabNameModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-style-3 text-[#FFFFFF]">
-          {t('tabs.createTitle')}
+          {t(mode === 'rename' ? 'tabs.renameTitle' : 'tabs.createTitle')}
         </div>
         <input
           autoFocus
@@ -74,25 +81,19 @@ const TabNameModal = ({
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSubmit();
           }}
-          className="w-full min-w-0 h-[30px] px-[12px] rounded-[7px] bg-[#2A2A30] text-[#DCDEE7] text-style-3 border-[1px] border-[#3A3943] focus:border-[#459BF8]"
+          className="dmn-text-field w-full min-w-0 h-[30px] px-[12px] text-style-3"
           placeholder={t('tabs.name.placeholder')}
         />
         {error && (
           <div className="text-[#ED6A5E] text-style-1 my-[-12px]">{error}</div>
         )}
         <div className="flex gap-[10.5px]">
-          <button
-            className="flex-1 h-[30px] bg-[#2A2A30] hover:bg-[#303036] active:bg-[#393941] rounded-[7px] text-[#DCDEE7] text-style-3"
-            onClick={handleSubmit}
-          >
-            {t('tabs.create')}
-          </button>
-          <button
-            className="w-[75px] h-[30px] bg-[#3C1E1E] hover:bg-[#442222] active:bg-[#522929] rounded-[7px] text-[#E6DBDB] text-style-3"
-            onClick={onClose}
-          >
+          <Button variant="primary" className="flex-1" onClick={handleSubmit}>
+            {t(mode === 'rename' ? 'tabs.rename' : 'tabs.create')}
+          </Button>
+          <Button variant="danger" className="w-[75px]" onClick={onClose}>
             {t('common.cancel')}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

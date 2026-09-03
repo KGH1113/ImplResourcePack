@@ -97,13 +97,12 @@ export function computeKeyElementStyles({
   const useInline = useInlineStyles === true;
 
   // 상태별 색상
-  const stateBackgroundColor = active
-    ? (activeBackgroundColor ?? backgroundColor)
-    : backgroundColor;
-  const stateBorderColor = active
-    ? (activeBorderColor ?? borderColor)
-    : borderColor;
-  const stateFontColor = active ? (activeFontColor ?? fontColor) : fontColor;
+  // 활성 스타일이 저장되지 않은 v1 키는 활성 기본값으로 표시한다.
+  // 대기 색상을 다시 상속하면 상태 신호는 바뀌어도 키가 전혀 눌리지 않은 것처럼
+  // 보인다. 사용자가 활성 스타일을 명시한 경우에는 그 값을 그대로 우선한다.
+  const stateBackgroundColor = active ? activeBackgroundColor : backgroundColor;
+  const stateBorderColor = active ? activeBorderColor : borderColor;
+  const stateFontColor = active ? activeFontColor : fontColor;
 
   // 이미지 소스
   const inactiveImageSrc = resolveImageSource(inactiveImage);

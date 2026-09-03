@@ -17,6 +17,22 @@ export const cssApi = {
   setContent: (content: string) =>
     invoke<CssSetContentResult>('css_set_content', { content }),
   reset: () => invoke<void>('css_reset'),
+  history: {
+    list: () =>
+      invoke<import('@src/types/plugin/api').CustomCssHistoryEntry[]>(
+        'css_history_get',
+      ),
+    activate: (path: string) =>
+      invoke<import('@src/types/plugin/api').CssHistoryMutationResult>(
+        'css_history_activate',
+        { path },
+      ),
+    remove: (path: string) =>
+      invoke<import('@src/types/plugin/api').CssHistoryMutationResult>(
+        'css_history_remove',
+        { path },
+      ),
+  },
   onUse: (listener: (payload: CssTogglePayload) => void) =>
     subscribe<CssTogglePayload>('css:use', listener),
   onContent: (listener: (payload: CustomCss) => void) =>
@@ -34,6 +50,16 @@ export const cssApi = {
       invoke<import('@src/types/plugin/api').TabCssLoadResult>('css_tab_load', {
         tabId,
       }),
+    applyHistory: (tabId: string, path: string) =>
+      invoke<import('@src/types/plugin/api').TabCssLoadResult>(
+        'css_tab_apply_history',
+        { tabId, path },
+      ),
+    export: (tabId: string) =>
+      invoke<import('@src/types/plugin/api').CssSetContentResult>(
+        'css_tab_export',
+        { tabId },
+      ),
     clear: (tabId: string) =>
       invoke<import('@src/types/plugin/api').TabCssClearResult>(
         'css_tab_clear',
@@ -61,6 +87,15 @@ export const cssApi = {
     ) =>
       subscribe<import('@src/types/plugin/api').TabCssResponse>(
         'tabCss:changed',
+        listener,
+      ),
+    onChangedAll: (
+      listener: (
+        payload: import('@src/types/plugin/css').TabCssOverrides,
+      ) => void,
+    ) =>
+      subscribe<import('@src/types/plugin/css').TabCssOverrides>(
+        'tabCss:changed_all',
         listener,
       ),
   },

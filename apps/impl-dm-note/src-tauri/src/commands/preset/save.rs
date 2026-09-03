@@ -82,6 +82,8 @@ pub fn preset_save(state: State<'_, AppState>) -> CmdResult<PresetOperationResul
                 Some(overrides)
             }
         },
+        tab_css_overrides: (!snapshot.tab_css_overrides.is_empty())
+            .then_some(snapshot.tab_css_overrides),
         embedded_local_fonts: (!embedded_local_fonts.is_empty()).then_some(embedded_local_fonts),
         embedded_local_images: (!embedded_local_images.is_empty()).then_some(embedded_local_images),
         embedded_local_sounds: (!embedded_local_sounds.is_empty()).then_some(embedded_local_sounds),
@@ -182,6 +184,11 @@ pub fn preset_save_tab(state: State<'_, AppState>) -> CmdResult<PresetOperationR
             Some(m)
         }
     };
+    let tab_css_overrides = snapshot
+        .tab_css_overrides
+        .get(&tab_id)
+        .cloned()
+        .map(|css| HashMap::from([(tab_id.clone(), css)]));
 
     let preset = PresetFile {
         keys: Some(tab_keys),
@@ -202,6 +209,7 @@ pub fn preset_save_tab(state: State<'_, AppState>) -> CmdResult<PresetOperationR
         custom_js: None,
         font_settings: None,
         tab_note_overrides,
+        tab_css_overrides,
         embedded_local_fonts: (!embedded_local_fonts.is_empty()).then_some(embedded_local_fonts),
         embedded_local_images: (!embedded_local_images.is_empty()).then_some(embedded_local_images),
         embedded_local_sounds: (!embedded_local_sounds.is_empty()).then_some(embedded_local_sounds),

@@ -1,5 +1,6 @@
 {
   "settings": {
+    "cssHistory": "最近的 CSS 檔案",
     "overlayLock": "鎖定懸浮窗",
     "alwaysOnTop": "始終置頂",
     "noteEffect": "顯示鍵雨",
@@ -25,6 +26,8 @@
     "keySoundOutputDefault": "預設裝置",
     "keySoundOutputBuffer": "ASIO 緩衝區大小",
     "keySoundOutputError": {
+      "deviceNotFound": "所選輸出裝置無法使用，已改用預設輸出。",
+      "deviceOpenFailed": "無法開啟所選輸出裝置，已改用預設輸出。",
       "asioUnavailableBuild": "此版本未包含 ASIO 支援。",
       "asioDeviceNotFound": "找不到 ASIO 裝置。",
       "asioOpenFailed": "無法開啟 ASIO 裝置，將使用預設輸出播放。",
@@ -273,6 +276,9 @@
     "remove": "移除"
   },
   "tabs": {
+    "renameTitle": "重新命名分頁",
+    "rename": "重新命名",
+    "reorder": "調整 {{name}} 順序",
     "handViewer": "手部按鍵顯示器",
     "footViewer": "腳部按鍵顯示器",
     "empty": "無額外標籤頁",
@@ -288,6 +294,7 @@
       "duplicate": "名稱已存在"
     },
     "errors": {
+      "notFound": "找不到分頁",
       "max": "最多可添加 30 個標籤頁",
       "invalid": "無效的名稱",
       "createFail": "建立失敗"
@@ -421,6 +428,8 @@
     "cancel": "取消"
   },
   "tabCss": {
+    "history": "最近的 CSS 檔案",
+    "export": "匯出 CSS",
     "enableCss": "啟用標籤頁 CSS",
     "cssFile": "CSS 檔案",
     "noFile": "(未選擇 CSS 檔案)",

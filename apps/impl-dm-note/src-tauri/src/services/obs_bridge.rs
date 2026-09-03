@@ -46,6 +46,11 @@ const DENIED_WS_COMMANDS: &[&str] = &[
     "sound_load",
     "sound_save_processed_wav",
     "css_load",
+    "css_history_get",
+    "css_history_activate",
+    "css_history_remove",
+    "css_tab_apply_history",
+    "css_tab_export",
     "css_reset",
     "js_load",
     "js_reset",
@@ -338,6 +343,12 @@ impl ObsBridgeService {
                 result = listener.accept() => {
                     match result {
                         Ok((stream, addr)) => {
+                            // 작은 키 이벤트 연속 전송이 Nagle 지연에 묶이지 않도록 한다.
+                            if let Err(error) = enable_tcp_nodelay(&stream) {
+                                log::warn!(
+                                    "[ObsBridge] TCP_NODELAY 설정 실패 from {addr}: {error}"
+                                );
+                            }
                             let bridge = Arc::clone(self);
                             tokio::spawn(async move {
                                 bridge.handle_connection(stream, addr).await;
@@ -916,6 +927,10 @@ impl ObsBridgeService {
     }
 }
 
+fn enable_tcp_nodelay(stream: &TcpStream) -> std::io::Result<()> {
+    stream.set_nodelay(true)
+}
+
 /// 파일 확장자로 MIME 타입 추정
 fn guess_mime(path: &str) -> &'static str {
     match path
@@ -975,5 +990,25 @@ fn broadcast_to_envelope(broadcast: &ObsBroadcast, seq: u64) -> Value {
             serde_json::json!({ "event": event, "data": data }),
         ),
         ObsBroadcast::Shutdown => unreachable!("Shutdown은 직접 처리됨"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::enable_tcp_nodelay;
+    use tokio::net::{TcpListener, TcpStream};
+
+    #[tokio::test]
+    async fn accepted_stream_enables_tcp_nodelay() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let client = TcpStream::connect(address);
+        let accepted = listener.accept();
+        let (_client, accepted) = tokio::join!(client, accepted);
+        let (server, _) = accepted.unwrap();
+
+        enable_tcp_nodelay(&server).unwrap();
+
+        assert!(server.nodelay().unwrap());
     }
 }

@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import Modal from '../../Modal';
 import Checkbox from '@components/main/common/Checkbox';
 import { useTranslation } from '@contexts/useTranslation';
+import {
+  clampValue,
+  NOTE_SETTINGS_CONSTRAINTS,
+} from '@src/types/settings/noteSettingsConstraints';
 
 interface LaboratoryProps {
   delayEnabled: boolean;
@@ -51,7 +55,7 @@ const LaboratoryModal = ({
   })();
 
   const handleAutoCalculate = () => {
-    setKeyDelay(String(calculatedDelay));
+    setKeyDelay(String(clampValue(calculatedDelay, 'keyDisplayDelayMs')));
   };
 
   const handleSave = async () => {
@@ -63,9 +67,9 @@ const LaboratoryModal = ({
       1,
       Math.min(parseInt(String(minimum), 10) || 1, 100),
     );
-    const sanitizedKeyDelay = Math.max(
-      0,
-      Math.min(parseInt(String(keyDelay), 10) || 0, 5000),
+    const sanitizedKeyDelay = clampValue(
+      parseInt(String(keyDelay), 10) || 0,
+      'keyDisplayDelayMs',
     );
 
     try {
@@ -143,14 +147,14 @@ const LaboratoryModal = ({
           <div className="flex items-center gap-[8px]">
             <input
               type="number"
-              min={0}
-              max={5000}
+              min={NOTE_SETTINGS_CONSTRAINTS.keyDisplayDelayMs.min}
+              max={NOTE_SETTINGS_CONSTRAINTS.keyDisplayDelayMs.max}
               value={keyDelay}
               onChange={(e) => setKeyDelay(e.target.value)}
               onBlur={() => {
-                const sanitized = Math.max(
-                  0,
-                  Math.min(Number(keyDelay) || 0, 5000),
+                const sanitized = clampValue(
+                  Number(keyDelay) || 0,
+                  'keyDisplayDelayMs',
                 );
                 setKeyDelay(String(sanitized));
               }}

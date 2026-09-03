@@ -17,6 +17,7 @@ import {
   applyCounterCacheSnapshot,
   setCachedKeyCounter,
 } from '@stores/signals/keyCounterCache';
+import { resetAllKeySignals, setKeyActive } from '@stores/signals/keySignals';
 import { getUndoRedoInProgress } from '@api/pluginDisplayElements';
 import { obsApi } from '@api/modules/obsApi';
 import { notifyLocaleChanged } from '@api/modules/shared';
@@ -126,7 +127,10 @@ function buildSettingsSnapshot(
 export function useAppBootstrap(viewerKind?: KeyViewerKind) {
   useEffect(() => {
     let disposed = false;
-    const isOverlayWindow = window.__dmn_window_type === 'overlay';
+    // Overlay App은 이 hook 다음 effect에서 __dmn_window_type을 설정한다.
+    // viewerKind가 있으면 초기 effect 순서와 무관하게 전용 overlay로 판별한다.
+    const isOverlayWindow =
+      viewerKind !== undefined || window.__dmn_window_type === 'overlay';
     // 키 표시 딜레이와 동기화를 위한 카운터 업데이트 지연
     const counterDelayTimers = new Map<
       string,
@@ -654,8 +658,17 @@ export function useAppBootstrap(viewerKind?: KeyViewerKind) {
       );
     } else {
       unsubscribers.push(
+        window.api.keys.onKeyState(({ key, state, mode }) => {
+          if (mode && mode !== useKeyStore.getState().selectedKeyType) return;
+          setKeyActive(key, state === 'DOWN');
+        }),
         window.api.keys.onCounterChanged(({ mode, key, count }) => {
           setCachedKeyCounter(mode, key, count);
+        }),
+        useKeyStore.subscribe((state, previousState) => {
+          if (state.selectedKeyType !== previousState.selectedKeyType) {
+            resetAllKeySignals();
+          }
         }),
       );
     }
@@ -678,6 +691,7 @@ export function useAppBootstrap(viewerKind?: KeyViewerKind) {
         }
       });
       clearCounterDelayTimers();
+      if (!isOverlayWindow) resetAllKeySignals();
     };
   }, [viewerKind]);
 }

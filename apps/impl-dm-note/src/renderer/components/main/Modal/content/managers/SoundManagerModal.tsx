@@ -223,12 +223,12 @@ const SoundManagerModal = ({
     <>
       <Modal onClick={onClose}>
         <div
-          className="flex flex-col bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30] p-[20px] pr-[6px]"
+          className="dmn-manager-surface flex flex-col p-[18px] pr-[6px]"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="relative" style={{ contain: 'inline-size' }}>
             <div
-              className={`absolute top-0 left-0 right-[14px] h-[10px] bg-gradient-to-b from-[#1A191E] to-transparent pointer-events-none z-10 ${
+              className={`dmn-manager-scroll-shadow dmn-manager-scroll-shadow--top absolute top-0 left-0 right-[14px] h-[10px] pointer-events-none z-10 ${
                 skipShadowTransition ? '' : 'transition-opacity duration-150'
               } ${scrollState.hasTopShadow ? 'opacity-100' : 'opacity-0'}`}
             />
@@ -334,13 +334,13 @@ const SoundManagerModal = ({
             </div>
 
             <div
-              className={`absolute bottom-0 left-0 right-[14px] h-[10px] bg-gradient-to-t from-[#1A191E] to-transparent pointer-events-none z-10 ${
+              className={`dmn-manager-scroll-shadow dmn-manager-scroll-shadow--bottom absolute bottom-0 left-0 right-[14px] h-[10px] pointer-events-none z-10 ${
                 skipShadowTransition ? '' : 'transition-opacity duration-150'
               } ${scrollState.hasBottomShadow ? 'opacity-100' : 'opacity-0'}`}
             />
           </div>
 
-          <div className="h-px bg-[#2A2A30] my-[20px] -ml-[20px] -mr-[6px]" />
+          <div className="dmn-manager-divider my-[18px] -ml-[18px] -mr-[6px] h-px" />
 
           <div className="flex items-center gap-[10.5px] pr-[14px]">
             <button

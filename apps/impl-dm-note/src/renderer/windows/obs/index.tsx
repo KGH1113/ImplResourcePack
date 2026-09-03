@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import '@styles/global.css';
+import '@styles/viewer-compat-v1.css';
 import { initIpcShim, disposeIpcShim } from '@api/ipcShim';
 
 async function bootstrap() {
@@ -26,6 +26,7 @@ async function bootstrap() {
     const { default: App } = await import('@src/renderer/windows/overlay/App');
 
     const container = document.getElementById('root')!;
+    container.dataset.dmnViewerSurface = '';
     const root = createRoot(container);
     root.render(
       <I18nProvider>

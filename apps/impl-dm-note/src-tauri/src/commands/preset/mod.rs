@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::{
     CustomCss, CustomJs, FontSettings, GraphPositions, KeyMappings, KeyPositions, KeyViewerTab,
-    KnobPositions, NoteSettings, SelectedViewerTabs, StatPositions, TabNoteOverrides,
+    KnobPositions, NoteSettings, SelectedViewerTabs, StatPositions, TabCssOverrides,
+    TabNoteOverrides,
 };
 
 #[derive(Serialize)]
@@ -31,6 +32,7 @@ pub struct PresetSnapshot {
     pub selected_viewer_tabs: SelectedViewerTabs,
     pub selected_key_type: String,
     pub tab_note_overrides: TabNoteOverrides,
+    pub tab_css_overrides: TabCssOverrides,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -61,6 +63,8 @@ pub(crate) struct PresetFile {
     pub font_settings: Option<FontSettings>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tab_note_overrides: Option<TabNoteOverrides>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tab_css_overrides: Option<TabCssOverrides>,
     pub embedded_local_fonts: Option<Vec<EmbeddedLocalFont>>,
     pub embedded_local_images: Option<Vec<EmbeddedLocalImage>>,
     pub embedded_local_sounds: Option<Vec<EmbeddedLocalSound>>,

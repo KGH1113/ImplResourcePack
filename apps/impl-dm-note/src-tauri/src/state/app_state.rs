@@ -4,7 +4,7 @@ use std::{
     io::{BufRead, BufReader},
     process::{Child, Command, Stdio},
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
     },
     thread::{self, JoinHandle},
@@ -13,7 +13,7 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use log::{error, warn};
-use parking_lot::RwLock;
+use parking_lot::{Mutex, MutexGuard, RwLock};
 use serde_json::json;
 use tauri::{
     menu::{Menu, MenuItem},
@@ -80,6 +80,81 @@ fn overlay_layout_mut(state: &mut AppStoreData, kind: KeyViewerKind) -> &mut Ove
     }
 }
 
+fn transfer_active_key_mode(
+    active_keys: &mut HashSet<String>,
+    previous_mode: &str,
+    next_mode: &str,
+) {
+    if previous_mode == next_mode {
+        return;
+    }
+
+    let previous_prefix = format!("{previous_mode}::");
+    let transferred = active_keys
+        .drain()
+        .map(|entry| {
+            entry
+                .strip_prefix(&previous_prefix)
+                .map(|key| format!("{next_mode}::{key}"))
+                .unwrap_or(entry)
+        })
+        .collect();
+    *active_keys = transferred;
+}
+
+fn match_key_for_mode(mappings: &KeyMappings, mode: &str, candidates: &[String]) -> Option<String> {
+    let keys = mappings.get(mode)?;
+    candidates
+        .iter()
+        .find(|candidate| keys.contains(candidate))
+        .cloned()
+}
+
+#[cfg(test)]
+mod active_key_mode_tests {
+    use super::{match_key_for_mode, transfer_active_key_mode};
+    use crate::models::KeyMappings;
+    use std::collections::HashSet;
+
+    #[test]
+    fn foot_tab_transfer_preserves_hand_active_keys() {
+        let mut active = HashSet::from([
+            "hand-a::KeyA".to_string(),
+            "foot-a::KeyB".to_string(),
+            "foot-a::KeyC".to_string(),
+        ]);
+
+        transfer_active_key_mode(&mut active, "foot-a", "foot-b");
+
+        assert_eq!(
+            active,
+            HashSet::from([
+                "hand-a::KeyA".to_string(),
+                "foot-b::KeyB".to_string(),
+                "foot-b::KeyC".to_string(),
+            ])
+        );
+    }
+
+    #[test]
+    fn matches_candidates_independently_for_each_viewer_mode() {
+        let mappings = KeyMappings::from([
+            ("numpad".to_string(), vec!["NUMPAD RETURN".to_string()]),
+            ("foot".to_string(), vec!["RETURN".to_string()]),
+        ]);
+        let candidates = vec!["RETURN".to_string(), "NUMPAD RETURN".to_string()];
+
+        assert_eq!(
+            match_key_for_mode(&mappings, "numpad", &candidates),
+            Some("NUMPAD RETURN".to_string())
+        );
+        assert_eq!(
+            match_key_for_mode(&mappings, "foot", &candidates),
+            Some("RETURN".to_string())
+        );
+    }
+}
+
 pub struct AppState {
     pub store: Arc<AppStore>,
     pub settings: SettingsService,
@@ -96,8 +171,10 @@ pub struct AppState {
     /// Raw input stream subscriber count - emit only when > 0
     raw_input_subscribers: Arc<std::sync::atomic::AtomicU32>,
     key_sound: Arc<KeySoundEngine>,
+    key_sound_output_generation: Arc<AtomicU64>,
     /// CSS 파일 핫리로딩 워처
     css_watcher: RwLock<Option<CssWatcher>>,
+    css_operation_lock: Mutex<()>,
     /// OBS WebSocket 브릿지
     pub obs_bridge: Arc<ObsBridgeService>,
     /// OBS 모드 시작 전 오버레이 가시성 상태 (복원용)
@@ -136,7 +213,21 @@ impl AppState {
             .clone()
             .map(output_backend_from_persist)
             .unwrap_or_default();
-        let key_sound = Arc::new(KeySoundEngine::with_output_backend(initial_backend));
+        let key_sound_output_generation = Arc::new(AtomicU64::new(0));
+        let fallback_store = store.clone();
+        let fallback_generation = key_sound_output_generation.clone();
+        let key_sound = Arc::new(KeySoundEngine::with_output_backend(
+            initial_backend,
+            Arc::new(move |_failed, fallback| {
+                fallback_generation.fetch_add(1, Ordering::AcqRel);
+                if let Err(err) = fallback_store.update(|state| {
+                    state.key_sound_output_backend =
+                        Some(output_backend_to_persist(fallback.clone()));
+                }) {
+                    warn!("[KeySound] failed to persist automatic output fallback: {err}");
+                }
+            }),
+        ));
         let obs_bridge = Arc::new(ObsBridgeService::new(env!("CARGO_PKG_VERSION")));
 
         Ok(Self {
@@ -153,6 +244,8 @@ impl AppState {
             active_keys,
             raw_input_subscribers: Arc::new(std::sync::atomic::AtomicU32::new(0)),
             key_sound,
+            key_sound_output_generation,
+            css_operation_lock: Mutex::new(()),
             css_watcher: RwLock::new(None),
             obs_bridge,
             obs_previous_overlay_visible: Arc::new(RwLock::new(None)),
@@ -1007,29 +1100,25 @@ impl AppState {
                                 }
                             }
 
-                            let Some(key_label) =
-                                keyboard.match_candidate(message.labels.iter().map(|s| s.as_str()))
-                            else {
-                                continue;
-                            };
                             let snapshot = app_state.store.snapshot();
                             let mut selected_modes = vec![
                                 snapshot.selected_viewer_tabs.hand.clone(),
                                 snapshot.selected_viewer_tabs.foot.clone(),
                             ];
                             selected_modes.dedup();
-                            selected_modes.retain(|mode| {
-                                snapshot
-                                    .keys
-                                    .get(mode)
-                                    .is_some_and(|keys| keys.contains(&key_label))
-                            });
-                            if selected_modes.is_empty() {
+                            let selected_routes = selected_modes
+                                .into_iter()
+                                .filter_map(|mode| {
+                                    match_key_for_mode(&snapshot.keys, &mode, &message.labels)
+                                        .map(|key| (mode, key))
+                                })
+                                .collect::<Vec<_>>();
+                            if selected_routes.is_empty() {
                                 continue;
                             }
 
-                            let mut state_changed = false;
-                            for mode in &selected_modes {
+                            let mut changed_routes = Vec::new();
+                            for (mode, key_label) in &selected_routes {
                                 let mode_changed = if state == "DOWN" {
                                     let changed = app_state.register_key_down(mode, &key_label);
                                     if changed {
@@ -1054,21 +1143,25 @@ impl AppState {
                                 } else {
                                     app_state.register_key_up(mode, &key_label)
                                 };
-                                state_changed |= mode_changed;
+                                if mode_changed {
+                                    changed_routes.push((mode.clone(), key_label.clone()));
+                                }
                             }
-                            if !state_changed {
+                            if changed_routes.is_empty() {
                                 continue;
                             }
                             let mode = keyboard.current_mode();
-                            if message.device == crate::ipc::InputDeviceKind::Keyboard
-                                && state == "DOWN"
-                                && snapshot
-                                    .keys
-                                    .get(&mode)
-                                    .is_some_and(|keys| keys.contains(&key_label))
-                            {
+                            let editor_key_label = changed_routes
+                                .iter()
+                                .find_map(|(route_mode, key)| {
+                                    (route_mode == &mode).then_some(key.as_str())
+                                });
+                            if let Some(key_label) = editor_key_label.filter(|_| {
+                                message.device == crate::ipc::InputDeviceKind::Keyboard
+                                    && state == "DOWN"
+                            }) {
                                 if let Some((sound_path, per_key_volume)) =
-                                    app_state.resolve_key_sound_binding(&mode, &key_label)
+                                    app_state.resolve_key_sound_binding(&mode, key_label)
                                 {
                                     #[cfg(debug_assertions)]
                                     let key_sound_input_started_at = Instant::now();
@@ -1138,7 +1231,22 @@ impl AppState {
                             // performance.now() - eventAgeMs로 실제 입력 시각을 복원해
                             // 노트 시작 위치가 렌더 프레임 경계에 양자화되는 것을 방지
                             let event_age_ms = recv_at.elapsed().as_secs_f64() * 1000.0;
-                            let payload = json!({ "key": key_label, "state": state, "mode": mode, "eventAgeMs": event_age_ms });
+                            // 마지막으로 선택한 편집 탭(mode) 하나만 보내면 foot 탭을 선택한
+                            // 동안 main 쪽 hand 이벤트 소비자가 모든 입력을 무시한다. 실제로
+                            // 상태가 바뀐 뷰어별 mode를 각각 보낸다.
+                            if let Some(main) = app_handle.get_webview_window("main") {
+                                for (changed_mode, key_label) in &changed_routes {
+                                    let viewer_payload = json!({
+                                        "key": key_label,
+                                        "state": state,
+                                        "mode": changed_mode,
+                                        "eventAgeMs": event_age_ms,
+                                    });
+                                    if let Err(err) = main.emit("keys:state", &viewer_payload) {
+                                        error!("failed to emit keys:state to main: {err}");
+                                    }
+                                }
+                            }
 
                             let mut emitted = false;
                             for (kind, cached_window) in [
@@ -1149,9 +1257,12 @@ impl AppState {
                                     KeyViewerKind::Hand => &snapshot.selected_viewer_tabs.hand,
                                     KeyViewerKind::Foot => &snapshot.selected_viewer_tabs.foot,
                                 };
-                                if !selected_modes.contains(selected_mode) {
+                                let Some((_, key_label)) = changed_routes
+                                    .iter()
+                                    .find(|(route_mode, _)| route_mode == selected_mode)
+                                else {
                                     continue;
-                                }
+                                };
                                 if cached_window.is_none() {
                                     *cached_window =
                                         app_handle.get_webview_window(overlay_label(kind));
@@ -1176,23 +1287,34 @@ impl AppState {
                                 }
                             }
                             if !emitted {
+                                let Some(key_label) = editor_key_label else {
+                                    continue;
+                                };
+                                let payload = json!({
+                                    "key": key_label,
+                                    "state": state,
+                                    "mode": mode,
+                                    "eventAgeMs": event_age_ms,
+                                });
                                 if app_state.is_obs_mode_active() {
                                     app_state.obs_bridge.broadcast_tauri_event(
                                         "keys:state".to_string(),
                                         payload.clone(),
                                     );
-                                } else if let Err(err) = app_handle.emit("keys:state", &payload) {
-                                    error!("failed to emit keys:state (fallback): {err}");
                                 }
                             }
 
                             if emitted {
                                 keys_state_emit_count += 1;
                             if keys_state_emit_count.is_multiple_of(500) {
+                                    let last_key = changed_routes
+                                        .first()
+                                        .map(|(_, key)| key.as_str())
+                                        .unwrap_or("");
                                     log::debug!(
                                         "[AppState] emitted keys:state {} times (last key={}, state={})",
                                         keys_state_emit_count,
-                                        key_label,
+                                        last_key,
                                         state
                                     );
                                 }
@@ -1740,6 +1862,11 @@ impl AppState {
         *guard = transferred;
     }
 
+    /// 한 viewer의 탭만 바뀔 때 다른 viewer의 active key는 그대로 보존한다.
+    pub fn transfer_active_keys_between(&self, previous_mode: &str, next_mode: &str) {
+        transfer_active_key_mode(&mut self.active_keys.write(), previous_mode, next_mode);
+    }
+
     pub fn persist_key_counters(&self) -> Result<KeyCounters> {
         let snapshot = self.key_counters.read().clone();
         self.store.set_key_counters(snapshot.clone())?;
@@ -1812,12 +1939,18 @@ impl AppState {
         &self,
         backend: KeySoundOutputBackend,
     ) -> KeySoundOutputState {
+        let generation = self
+            .key_sound_output_generation
+            .fetch_add(1, Ordering::AcqRel)
+            + 1;
         let output_state = self.key_sound.set_output_backend(backend);
         let requested = output_state.requested.clone();
-        if let Err(err) = self.store.update(|state| {
-            state.key_sound_output_backend = Some(output_backend_to_persist(requested.clone()));
-        }) {
-            warn!("[KeySound] failed to persist output backend: {err}");
+        if self.key_sound_output_generation.load(Ordering::Acquire) == generation {
+            if let Err(err) = self.store.update(|state| {
+                state.key_sound_output_backend = Some(output_backend_to_persist(requested.clone()));
+            }) {
+                warn!("[KeySound] failed to persist output backend: {err}");
+            }
         }
         output_state
     }
@@ -1897,6 +2030,10 @@ impl AppState {
         }
     }
 
+    pub fn lock_css_operation(&self) -> MutexGuard<'_, ()> {
+        self.css_operation_lock.lock()
+    }
+
     /// 전역 CSS 파일 워칭 중지
     pub fn unwatch_global_css(&self) {
         if let Some(watcher) = self.css_watcher.read().as_ref() {
@@ -1919,6 +2056,12 @@ impl AppState {
             watcher.unwatch_tab(tab_id);
         }
     }
+
+    pub fn reload_css_watchers(&self) {
+        if let Some(watcher) = self.css_watcher.read().as_ref() {
+            watcher.reload_from_store();
+        }
+    }
 }
 
 impl Drop for AppState {
@@ -1930,6 +2073,9 @@ impl Drop for AppState {
 fn output_backend_from_persist(value: KeySoundOutputBackendPersist) -> KeySoundOutputBackend {
     match value {
         KeySoundOutputBackendPersist::DefaultDevice => KeySoundOutputBackend::DefaultDevice,
+        KeySoundOutputBackendPersist::Device { id, name } => {
+            KeySoundOutputBackend::Device { id, name }
+        }
         KeySoundOutputBackendPersist::Asio {
             driver_name,
             buffer_size,
@@ -1943,6 +2089,9 @@ fn output_backend_from_persist(value: KeySoundOutputBackendPersist) -> KeySoundO
 fn output_backend_to_persist(value: KeySoundOutputBackend) -> KeySoundOutputBackendPersist {
     match value {
         KeySoundOutputBackend::DefaultDevice => KeySoundOutputBackendPersist::DefaultDevice,
+        KeySoundOutputBackend::Device { id, name } => {
+            KeySoundOutputBackendPersist::Device { id, name }
+        }
         KeySoundOutputBackend::Asio {
             driver_name,
             buffer_size,

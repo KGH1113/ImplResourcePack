@@ -52,9 +52,9 @@ const StatItem = React.memo(
       counterSettings.enabled &&
       counterSettings.placement === 'inside';
 
-    const counterValue = showInsideCounter
-      ? (getStatValueSignal(statType as StatItemType).value ?? 0) | 0
-      : 0;
+    const counterSignal = showInsideCounter
+      ? getStatValueSignal(statType as StatItemType)
+      : undefined;
 
     if (position?.hidden || isTransparent) return null;
 
@@ -71,9 +71,9 @@ const StatItem = React.memo(
             style={imageStyle}
             draggable={false}
           />
-        ) : showInsideCounter ? (
+        ) : showInsideCounter && counterSignal ? (
           <InsideCounterLayout
-            count={counterValue}
+            countSignal={counterSignal}
             labelText={labelText}
             textStyle={textStyle}
             active={active}

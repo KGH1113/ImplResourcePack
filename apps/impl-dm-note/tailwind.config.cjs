@@ -1,12 +1,44 @@
 /** @type {import('tailwindcss').Config} */
-const { typography } = require("./src/renderer/styles/typography");
-const { colors } = require("./src/renderer/styles/colors");
+const { typography } = require('./src/renderer/styles/typography');
+const { colors } = require('./src/renderer/styles/colors');
 
 module.exports = {
-  content: ["./src/**/*.{js,jsx,tsx,html}"],
+  content: ['./src/**/*.{js,jsx,tsx,html}'],
   theme: {
     extend: {
       colors: {
+        ui: {
+          app: 'var(--ui-bg-app)',
+          panel: 'var(--ui-bg-panel)',
+          'panel-detached': 'var(--ui-bg-panel-detached)',
+          surface: 'var(--ui-bg-surface)',
+          'surface-hover': 'var(--ui-bg-surface-hover)',
+          'surface-active': 'var(--ui-bg-surface-active)',
+          elevated: 'var(--ui-bg-elevated)',
+          inset: 'var(--ui-bg-inset)',
+          glass: 'var(--ui-bg-glass)',
+          line: {
+            subtle: 'var(--ui-line-subtle)',
+            DEFAULT: 'var(--ui-line)',
+            strong: 'var(--ui-line-strong)',
+          },
+          fg: {
+            primary: 'var(--ui-fg-primary)',
+            secondary: 'var(--ui-fg-secondary)',
+            muted: 'var(--ui-fg-muted)',
+            disabled: 'var(--ui-fg-disabled)',
+            inverse: 'var(--ui-fg-inverse)',
+          },
+          accent: {
+            DEFAULT: 'var(--ui-accent)',
+            hover: 'var(--ui-accent-hover)',
+            pressed: 'var(--ui-accent-pressed)',
+            soft: 'var(--ui-accent-soft)',
+          },
+          success: 'var(--ui-success)',
+          warning: 'var(--ui-warning)',
+          danger: 'var(--ui-danger)',
+        },
         primary: colors.primary,
         button: colors.button,
         text: colors.text,
@@ -19,33 +51,76 @@ module.exports = {
         textDisabled: colors.textDisabled,
         danger: colors.danger,
       },
+      borderRadius: {
+        'ui-inner': 'var(--ui-radius-inner)',
+        'ui-control': 'var(--ui-radius-control)',
+        'ui-surface': 'var(--ui-radius-surface)',
+        'ui-popup': 'var(--ui-radius-popup)',
+        'ui-modal': 'var(--ui-radius-modal)',
+      },
+      boxShadow: {
+        'ui-surface': 'var(--ui-shadow-surface)',
+        'ui-popup': 'var(--ui-shadow-popup)',
+        'ui-modal': 'var(--ui-shadow-modal)',
+        'ui-focus': 'var(--ui-shadow-focus)',
+      },
     },
   },
   plugins: [
     function ({ addUtilities }) {
       addUtilities({
-        ".all-unset": {
-          all: "unset",
+        '.all-unset': {
+          all: 'unset',
         },
-        ".text-style-1": {
+        '.text-caption': {
+          fontSize: 'var(--ui-type-caption-size)',
+          lineHeight: 'var(--ui-type-caption-line)',
+          letterSpacing: 'var(--ui-type-caption-tracking)',
+          fontWeight: 'var(--ui-type-caption-weight)',
+        },
+        '.text-body': {
+          fontSize: 'var(--ui-type-body-size)',
+          lineHeight: 'var(--ui-type-body-line)',
+          letterSpacing: 'var(--ui-type-body-tracking)',
+          fontWeight: 'var(--ui-type-body-weight)',
+        },
+        '.text-label': {
+          fontSize: 'var(--ui-type-label-size)',
+          lineHeight: 'var(--ui-type-label-line)',
+          letterSpacing: 'var(--ui-type-label-tracking)',
+          fontWeight: 'var(--ui-type-label-weight)',
+        },
+        '.text-title': {
+          fontSize: 'var(--ui-type-title-size)',
+          lineHeight: 'var(--ui-type-title-line)',
+          letterSpacing: 'var(--ui-type-title-tracking)',
+          fontWeight: 'var(--ui-type-title-weight)',
+        },
+        '.text-heading': {
+          fontSize: 'var(--ui-type-heading-size)',
+          lineHeight: 'var(--ui-type-heading-line)',
+          letterSpacing: 'var(--ui-type-heading-tracking)',
+          fontWeight: 'var(--ui-type-heading-weight)',
+        },
+        '.text-style-1': {
           fontSize: typography.style[1].fontSize,
           lineHeight: typography.style[1].lineHeight,
           letterSpacing: typography.style[1].letterSpacing,
           fontWeight: typography.style[1].fontWeight,
         },
-        ".text-style-2": {
+        '.text-style-2': {
           fontSize: typography.style[2].fontSize,
           lineHeight: typography.style[2].lineHeight,
           letterSpacing: typography.style[2].letterSpacing,
           fontWeight: typography.style[2].fontWeight,
         },
-        ".text-style-3": {
+        '.text-style-3': {
           fontSize: typography.style[3].fontSize,
           lineHeight: typography.style[3].lineHeight,
           letterSpacing: typography.style[3].letterSpacing,
           fontWeight: typography.style[3].fontWeight,
         },
-        ".text-style-4": {
+        '.text-style-4': {
           fontSize: typography.style[4].fontSize,
           lineHeight: typography.style[4].lineHeight,
           letterSpacing: typography.style[4].letterSpacing,

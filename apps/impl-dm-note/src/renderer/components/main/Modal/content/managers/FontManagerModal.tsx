@@ -420,7 +420,7 @@ const FontManagerModal = ({ isOpen, onClose, t }: FontManagerModalProps) => {
           fallback={
             <Modal onClick={handleCloseWebFontModal}>
               <div
-                className="w-[640px] max-w-[calc(100vw-80px)] h-[335px] flex items-center justify-center bg-[#1A191E] rounded-[10px] border border-[#2A2A30]"
+                className="dmn-manager-surface w-[640px] max-w-[calc(100vw-80px)] h-[335px] flex items-center justify-center"
                 onClick={(event) => event.stopPropagation()}
               >
                 <p className="text-[12px] leading-[16px] text-[#8A8D99]">

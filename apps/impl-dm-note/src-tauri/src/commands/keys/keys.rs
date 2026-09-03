@@ -1,4 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashSet,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
@@ -37,7 +40,7 @@ pub struct ResetModeResponse {
     pub mode: String,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TabsChangePayload {
     pub tabs: Vec<KeyViewerTab>,
@@ -61,6 +64,77 @@ pub struct TabDeleteResult {
     pub selected: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct TabMutationResult {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<TabsChangePayload>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+fn validate_tab_name(
+    tabs: &[KeyViewerTab],
+    viewer_kind: KeyViewerKind,
+    excluded_id: Option<&str>,
+    name: &str,
+) -> Result<String, &'static str> {
+    let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return Err("invalid-name");
+    }
+    if trimmed.encode_utf16().count() > 10 {
+        return Err("name-too-long");
+    }
+    if tabs.iter().any(|tab| {
+        tab.viewer_kind == viewer_kind
+            && Some(tab.id.as_str()) != excluded_id
+            && tab.name.trim() == trimmed
+    }) {
+        return Err("duplicate-name");
+    }
+    Ok(trimmed.to_string())
+}
+
+fn reorder_viewer_tabs(
+    tabs: &mut [KeyViewerTab],
+    viewer_kind: KeyViewerKind,
+    ordered_ids: &[String],
+) -> Result<bool, &'static str> {
+    let current_display_ids = tabs
+        .iter()
+        .filter(|tab| tab.viewer_kind == viewer_kind)
+        .map(|tab| tab.id.clone())
+        .rev()
+        .collect::<Vec<_>>();
+    let expected = current_display_ids.iter().collect::<HashSet<_>>();
+    let requested = ordered_ids.iter().collect::<HashSet<_>>();
+    if ordered_ids.len() != current_display_ids.len()
+        || requested.len() != ordered_ids.len()
+        || requested != expected
+    {
+        return Err("invalid-order");
+    }
+    if ordered_ids == current_display_ids {
+        return Ok(false);
+    }
+
+    let source = tabs.to_vec();
+    let desired_storage_ids = ordered_ids.iter().rev().collect::<Vec<_>>();
+    for (desired_index, tab) in tabs
+        .iter_mut()
+        .filter(|tab| tab.viewer_kind == viewer_kind)
+        .enumerate()
+    {
+        let id = desired_storage_ids[desired_index];
+        *tab = source
+            .iter()
+            .find(|candidate| candidate.id == *id)
+            .expect("validated tab id must exist")
+            .clone();
+    }
+    Ok(true)
 }
 
 #[tauri::command]
@@ -364,25 +438,16 @@ pub fn tabs_create(
     viewer_kind: KeyViewerKind,
     name: String,
 ) -> CmdResult<TabCreateResult> {
-    if name.trim().is_empty() {
-        return Ok(TabCreateResult {
-            result: None,
-            error: Some("invalid-name".to_string()),
-        });
-    }
-
-    let trimmed = name.trim().to_string();
     let snapshot = state.store.snapshot();
-    if snapshot
-        .tabs
-        .iter()
-        .any(|tab| tab.viewer_kind == viewer_kind && tab.name == trimmed)
-    {
-        return Ok(TabCreateResult {
-            result: None,
-            error: Some("duplicate-name".to_string()),
-        });
-    }
+    let trimmed = match validate_tab_name(&snapshot.tabs, viewer_kind, None, &name) {
+        Ok(name) => name,
+        Err(error) => {
+            return Ok(TabCreateResult {
+                result: None,
+                error: Some(error.to_string()),
+            });
+        }
+    };
     if snapshot
         .tabs
         .iter()
@@ -448,6 +513,98 @@ pub fn tabs_create(
 
     Ok(TabCreateResult {
         result: Some(tab),
+        error: None,
+    })
+}
+
+#[tauri::command]
+pub fn tabs_rename(
+    state: State<'_, AppState>,
+    app: AppHandle,
+    viewer_kind: KeyViewerKind,
+    id: String,
+    name: String,
+) -> CmdResult<TabMutationResult> {
+    let mut error = None;
+    let mut changed = false;
+    let updated = state.store.update(|store| {
+        let Some(index) = store
+            .tabs
+            .iter()
+            .position(|tab| tab.id == id && tab.viewer_kind == viewer_kind)
+        else {
+            error = Some("not-found".to_string());
+            return;
+        };
+        let validated = match validate_tab_name(&store.tabs, viewer_kind, Some(&id), &name) {
+            Ok(name) => name,
+            Err(validation_error) => {
+                error = Some(validation_error.to_string());
+                return;
+            }
+        };
+        changed = store.tabs[index].name != validated;
+        store.tabs[index].name = validated;
+    })?;
+
+    if let Some(error) = error {
+        return Ok(TabMutationResult {
+            result: None,
+            error: Some(error),
+        });
+    }
+
+    let payload = TabsChangePayload {
+        tabs: updated.tabs,
+        selected_key_type: updated.selected_key_type,
+        selected_viewer_tabs: updated.selected_viewer_tabs,
+        changed_viewer_kind: Some(viewer_kind),
+    };
+    if changed {
+        app.emit("tabs:changed", &payload)?;
+        state.refresh_obs_snapshot();
+    }
+    Ok(TabMutationResult {
+        result: Some(payload),
+        error: None,
+    })
+}
+
+#[tauri::command]
+pub fn tabs_reorder(
+    state: State<'_, AppState>,
+    app: AppHandle,
+    viewer_kind: KeyViewerKind,
+    ordered_ids: Vec<String>,
+) -> CmdResult<TabMutationResult> {
+    let mut error = None;
+    let mut changed = false;
+    let updated = state.store.update(|store| {
+        match reorder_viewer_tabs(&mut store.tabs, viewer_kind, &ordered_ids) {
+            Ok(was_changed) => changed = was_changed,
+            Err(reorder_error) => error = Some(reorder_error.to_string()),
+        }
+    })?;
+
+    if let Some(error) = error {
+        return Ok(TabMutationResult {
+            result: None,
+            error: Some(error),
+        });
+    }
+
+    let payload = TabsChangePayload {
+        tabs: updated.tabs,
+        selected_key_type: updated.selected_key_type,
+        selected_viewer_tabs: updated.selected_viewer_tabs,
+        changed_viewer_kind: Some(viewer_kind),
+    };
+    if changed {
+        app.emit("tabs:changed", &payload)?;
+        state.refresh_obs_snapshot();
+    }
+    Ok(TabMutationResult {
+        result: Some(payload),
         error: None,
     })
 }
@@ -609,6 +766,11 @@ pub fn tabs_select(
         });
     }
 
+    let previous_viewer_mode = match viewer_kind {
+        KeyViewerKind::Hand => snapshot.selected_viewer_tabs.hand.clone(),
+        KeyViewerKind::Foot => snapshot.selected_viewer_tabs.foot.clone(),
+    };
+
     // Only update the requested viewer group while holding the store write lock.
     // Building the full SelectedViewerTabs value from an earlier snapshot can
     // otherwise overwrite a near-simultaneous selection in the other group.
@@ -617,7 +779,7 @@ pub fn tabs_select(
         .update(|store| apply_viewer_tab_selection(store, viewer_kind, &id))?;
     let selected_viewer_tabs = updated.selected_viewer_tabs.clone();
     state.keyboard.set_mode(id.clone());
-    state.transfer_active_keys(&id);
+    state.transfer_active_keys_between(&previous_viewer_mode, &id);
 
     app.emit("keys:mode-changed", &serde_json::json!({ "mode": &id }))?;
     state.refresh_obs_snapshot();
@@ -641,8 +803,33 @@ pub fn tabs_select(
 
 #[cfg(test)]
 mod tab_selection_tests {
-    use super::apply_viewer_tab_selection;
-    use crate::models::{AppStoreData, KeyViewerKind};
+    use super::{apply_viewer_tab_selection, reorder_viewer_tabs, validate_tab_name};
+    use crate::models::{AppStoreData, KeyViewerKind, KeyViewerTab};
+
+    fn mixed_tabs() -> Vec<KeyViewerTab> {
+        vec![
+            KeyViewerTab {
+                id: "hand-a".to_string(),
+                name: "Hand A".to_string(),
+                viewer_kind: KeyViewerKind::Hand,
+            },
+            KeyViewerTab {
+                id: "foot-a".to_string(),
+                name: "Foot A".to_string(),
+                viewer_kind: KeyViewerKind::Foot,
+            },
+            KeyViewerTab {
+                id: "hand-b".to_string(),
+                name: "Hand B".to_string(),
+                viewer_kind: KeyViewerKind::Hand,
+            },
+            KeyViewerTab {
+                id: "foot-b".to_string(),
+                name: "Foot B".to_string(),
+                viewer_kind: KeyViewerKind::Foot,
+            },
+        ]
+    }
 
     #[test]
     fn selecting_foot_preserves_the_current_hand_tab() {
@@ -666,6 +853,73 @@ mod tab_selection_tests {
         assert_eq!(store.selected_viewer_tabs.hand, "hand-custom");
         assert_eq!(store.selected_viewer_tabs.foot, "foot-custom");
         assert_eq!(store.selected_key_type, "hand-custom");
+    }
+
+    #[test]
+    fn reorder_uses_display_order_and_preserves_other_viewer_slots() {
+        let mut tabs = mixed_tabs();
+
+        assert!(reorder_viewer_tabs(
+            &mut tabs,
+            KeyViewerKind::Hand,
+            &["hand-a".to_string(), "hand-b".to_string()],
+        )
+        .unwrap());
+
+        assert_eq!(
+            tabs.iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(),
+            ["hand-b", "foot-a", "hand-a", "foot-b"]
+        );
+        assert_eq!(
+            tabs.iter()
+                .filter(|tab| tab.viewer_kind == KeyViewerKind::Hand)
+                .map(|tab| tab.id.as_str())
+                .rev()
+                .collect::<Vec<_>>(),
+            ["hand-a", "hand-b"]
+        );
+    }
+
+    #[test]
+    fn reorder_rejects_missing_duplicate_and_cross_viewer_ids() {
+        let original = mixed_tabs();
+        for invalid in [
+            vec!["hand-a".to_string()],
+            vec!["hand-a".to_string(), "hand-a".to_string()],
+            vec!["hand-a".to_string(), "foot-a".to_string()],
+        ] {
+            let mut tabs = original.clone();
+            assert_eq!(
+                reorder_viewer_tabs(&mut tabs, KeyViewerKind::Hand, &invalid),
+                Err("invalid-order")
+            );
+            assert_eq!(tabs, original);
+        }
+    }
+
+    #[test]
+    fn tab_names_are_trimmed_scoped_and_count_utf16_units() {
+        let tabs = mixed_tabs();
+        assert_eq!(
+            validate_tab_name(&tabs, KeyViewerKind::Hand, None, "  New  "),
+            Ok("New".to_string())
+        );
+        assert_eq!(
+            validate_tab_name(&tabs, KeyViewerKind::Hand, None, "Hand A"),
+            Err("duplicate-name")
+        );
+        assert_eq!(
+            validate_tab_name(&tabs, KeyViewerKind::Foot, None, "Hand A"),
+            Ok("Hand A".to_string())
+        );
+        assert_eq!(
+            validate_tab_name(&tabs, KeyViewerKind::Hand, None, "😀😀😀😀abc"),
+            Err("name-too-long")
+        );
+        assert_eq!(
+            validate_tab_name(&tabs, KeyViewerKind::Hand, Some("hand-a"), "Hand A"),
+            Ok("Hand A".to_string())
+        );
     }
 }
 

@@ -77,16 +77,25 @@ export const soundApi = {
 // 키음 출력 백엔드 (기본 장치 / ASIO)
 export type KeySoundOutputBackend =
   | { kind: 'defaultDevice' }
+  | { kind: 'device'; id: string; name: string }
   | { kind: 'asio'; driverName: string; bufferSize?: number | null };
 
 export type KeySoundOutputErrorCode =
   | 'asioUnavailableBuild'
   | 'asioDeviceNotFound'
   | 'asioOpenFailed'
-  | 'defaultOpenFailed';
+  | 'defaultOpenFailed'
+  | 'deviceNotFound'
+  | 'deviceOpenFailed';
+
+export interface KeySoundOutputDevice {
+  id: string;
+  name: string;
+}
 
 export interface KeySoundOutputDevices {
   defaultDevice: boolean;
+  system: KeySoundOutputDevice[];
   asio: string[];
 }
 

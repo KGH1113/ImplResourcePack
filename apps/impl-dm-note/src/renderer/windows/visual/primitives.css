@@ -1,0 +1,78 @@
+html,
+body,
+#root {
+  width: 1280px;
+  height: 720px;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #0d0d0f;
+}
+
+.primitive-stage {
+  box-sizing: border-box;
+  width: 1280px;
+  height: 720px;
+  padding: 56px;
+  background:
+    radial-gradient(
+      circle at 75% 10%,
+      rgba(139, 92, 246, 0.11),
+      transparent 34%
+    ),
+    var(--ui-bg-app);
+}
+
+.primitive-card {
+  width: 560px;
+  padding: 24px;
+  border: 1px solid var(--ui-line-subtle);
+  border-radius: var(--ui-radius-surface);
+  background: var(--ui-bg-panel);
+  box-shadow: var(--ui-shadow-surface);
+}
+
+.primitive-heading {
+  margin: 0 0 20px;
+  color: var(--ui-fg-primary);
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.primitive-row {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 10px;
+}
+
+.primitive-label {
+  width: 110px;
+  color: var(--ui-fg-secondary);
+  font-size: 12px;
+}
+
+.primitive-dropdown-anchor {
+  position: absolute;
+  right: 18px;
+  bottom: 66px;
+}
+
+.primitive-modal-card {
+  display: flex;
+  width: 330px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border-radius: var(--ui-radius-modal);
+  background: var(--ui-bg-panel);
+}
+
+.primitive-popup-content {
+  min-width: 170px;
+  padding: 12px;
+  color: var(--ui-fg-secondary);
+  font-size: 12px;
+}

@@ -1464,7 +1464,8 @@ const Grid = ({
         gridContainerRef.current = node;
       }}
       data-grid-container
-      className="relative w-full h-full bg-[#3A3943] rounded-[0px] overflow-hidden"
+      data-dmn-viewer-surface
+      className="dmn-grid-surface relative h-full w-full overflow-hidden"
       style={{ backgroundColor: color === 'transparent' ? '#3A3943' : color }}
       onContextMenu={(e) => {
         if (duplicateState) {

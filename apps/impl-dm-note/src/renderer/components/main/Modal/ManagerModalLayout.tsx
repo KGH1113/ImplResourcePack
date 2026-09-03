@@ -5,6 +5,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import { useLenis } from '@hooks/useLenis';
+import { useModalPresence } from '@hooks/ui/usePopupPresence';
 import { getScrollShadowState } from '@utils/grid/scrollShadow';
 import Modal from './Modal';
 
@@ -43,6 +44,7 @@ const ManagerModalLayout = ({
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   const [isScrollable, setIsScrollable] = useState(false);
   const isFirstRender = useRef(true);
+  const modalPresence = useModalPresence(isOpen);
 
   const updateScrollState = (el: HTMLElement | null) => {
     if (!el) return;
@@ -104,33 +106,33 @@ const ManagerModalLayout = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, wrapperElement, ...contentDeps]);
 
-  if (!isOpen) return null;
+  if (!modalPresence.mounted) return null;
 
   const shadowTransitionClass = skipShadowTransition
     ? ''
     : 'transition-opacity duration-150';
 
   return (
-    <Modal onClick={onClose}>
+    <Modal onClick={onClose} motionState={modalPresence.state}>
       <div
-        className="flex flex-col bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30] p-[20px] pr-[6px]"
+        className="dmn-manager-surface flex flex-col p-[16px] pr-[4px]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 탭 영역 */}
-        {tabs && <div className="pr-[14px]">{tabs}</div>}
+        {tabs && <div className="pr-[12px]">{tabs}</div>}
 
         {/* 스크롤 영역 */}
         <div className="relative">
           {/* 상단 그림자 */}
           <div
-            className={`absolute top-0 left-0 right-[14px] h-[10px] bg-gradient-to-b from-[#1A191E] to-transparent pointer-events-none z-10 ${shadowTransitionClass} ${
+            className={`dmn-manager-scroll-shadow dmn-manager-scroll-shadow--top absolute top-0 left-0 right-[12px] h-[10px] pointer-events-none z-10 ${shadowTransitionClass} ${
               scrollState.hasTopShadow ? 'opacity-100' : 'opacity-0'
             }`}
           />
 
           <div
             ref={scrollRef}
-            className="modal-content-scroll pr-[14px]"
+            className="modal-content-scroll pr-[12px]"
             style={{
               height:
                 containerHeight !== null ? `${containerHeight}px` : 'auto',
@@ -142,24 +144,24 @@ const ManagerModalLayout = ({
               willChange: 'scroll-position',
             }}
           >
-            <div ref={contentRef} className="flex flex-col gap-[19px] py-[5px]">
+            <div ref={contentRef} className="flex flex-col gap-[16px] py-[4px]">
               {children}
             </div>
           </div>
 
           {/* 하단 그림자 */}
           <div
-            className={`absolute bottom-0 left-0 right-[14px] h-[10px] bg-gradient-to-t from-[#1A191E] to-transparent pointer-events-none z-10 ${shadowTransitionClass} ${
+            className={`dmn-manager-scroll-shadow dmn-manager-scroll-shadow--bottom absolute bottom-0 left-0 right-[12px] h-[10px] pointer-events-none z-10 ${shadowTransitionClass} ${
               scrollState.hasBottomShadow ? 'opacity-100' : 'opacity-0'
             }`}
           />
         </div>
 
         {/* 구분선 */}
-        <div className="h-px bg-[#2A2A30] my-[20px] -ml-[20px] -mr-[6px]" />
+        <div className="dmn-manager-divider my-[16px] -ml-[16px] -mr-[4px] h-px" />
 
         {/* 하단 버튼 */}
-        <div className="flex items-center gap-[10.5px] pr-[14px]">{footer}</div>
+        <div className="flex items-center gap-[8px] pr-[12px]">{footer}</div>
 
         {/* 추가 콘텐츠 (로딩/에러 등) */}
         {extra}

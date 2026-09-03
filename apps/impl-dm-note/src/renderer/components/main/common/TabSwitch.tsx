@@ -17,27 +17,40 @@ const TabSwitch = ({
   activeTab,
   onTabChange,
   className,
-}: TabSwitchProps) => (
-  <div
-    className={`flex w-full h-[30px] bg-[#26262C] rounded-[7px] items-center p-[3px] gap-[5px] ${
-      className ?? ''
-    }`}
-  >
-    {tabs.map((tab) => (
-      <button
-        key={tab.id}
-        type="button"
-        onClick={() => onTabChange(tab.id)}
-        className={`w-full h-[24px] rounded-[7px] text-style-2 transition-colors ${
-          activeTab === tab.id
-            ? 'bg-[#3A3943] text-white'
-            : 'bg-[#26262C] text-[#9395A1] hover:bg-[#303036]'
-        }`}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
-);
+}: TabSwitchProps) => {
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex((tab) => tab.id === activeTab),
+  );
+
+  return (
+    <div className={`dmn-segmented ${className ?? ''}`}>
+      {tabs.length > 0 && (
+        <span
+          className="dmn-segment-thumb"
+          aria-hidden="true"
+          style={{
+            width: `calc((100% - 6px) / ${tabs.length})`,
+            transform: `translate3d(${activeIndex * 100}%, 0, 0)`,
+          }}
+        />
+      )}
+      {tabs.map((tab) => {
+        const selected = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onTabChange(tab.id)}
+            className="dmn-segment-button"
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 export default TabSwitch;

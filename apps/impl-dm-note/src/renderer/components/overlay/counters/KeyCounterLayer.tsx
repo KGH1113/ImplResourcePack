@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime';
 import { getKeyCounterSignal } from '@stores/signals/keyCounterSignals';
-import { getKeySignal } from '@stores/signals/keySignals';
+import { useKeyActive } from '@hooks/overlay/useKeyActive';
 import OutsideCounter from './OutsideCounter';
 
 interface KeyPosition {
@@ -30,7 +30,7 @@ const KeyCounter = React.memo(
     useSignals();
     const counterSignal = getKeyCounterSignal(mode ?? '', globalKey);
     const count = counterSignal?.value ?? 0;
-    const active = getKeySignal(globalKey).value;
+    const active = useKeyActive(globalKey);
 
     return (
       <OutsideCounter

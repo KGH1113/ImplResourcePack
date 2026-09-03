@@ -186,7 +186,7 @@ const ImagePicker = ({
     >
       <div
         ref={pickerContainerRef}
-        className="flex flex-col p-[8px] gap-[8px] w-[146px] bg-[#1A191E] rounded-[13px] border-[1px] border-[#2A2A30]"
+        className="dmn-picker-surface flex w-[146px] flex-col gap-[8px] p-[8px]"
       >
         {/* 모드 전환 버튼 */}
         <div className="flex gap-[6px] max-w-full">
@@ -225,13 +225,11 @@ const ImagePicker = ({
 
           {/* 이미지 표시 */}
           {currentImage && !currentTransparent && (
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: currentImageSrc
-                  ? `url(${currentImageSrc})`
-                  : 'none',
-              }}
+            <img
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+              src={currentImageSrc || ''}
+              alt=""
+              draggable={false}
             />
           )}
 

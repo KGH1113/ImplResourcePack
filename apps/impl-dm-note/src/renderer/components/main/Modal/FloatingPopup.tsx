@@ -8,6 +8,7 @@ import {
   autoUpdate,
   type Placement,
 } from '@floating-ui/react';
+import { usePopupPresence } from '@hooks/ui/usePopupPresence';
 
 type FloatingPopupProps = {
   open: boolean;
@@ -25,6 +26,9 @@ type FloatingPopupProps = {
   autoClose?: boolean;
   closeOnScroll?: boolean; // 스크롤 시 닫을지 여부
   portal?: boolean;
+  role?: 'dialog' | 'menu' | 'listbox';
+  ariaLabel?: string;
+  restoreFocus?: boolean;
 };
 
 const FloatingPopup = ({
@@ -43,8 +47,18 @@ const FloatingPopup = ({
   autoClose = true,
   closeOnScroll = false,
   portal = false,
+  role = 'dialog',
+  ariaLabel,
+  restoreFocus = false,
 }: FloatingPopupProps) => {
-  const { x, y, refs, strategy, update } = useFloating({
+  const {
+    x,
+    y,
+    refs,
+    strategy,
+    update,
+    placement: resolvedPlacement,
+  } = useFloating({
     placement: placement as Placement,
     strategy: portal ? 'fixed' : 'absolute',
     middleware: [fuiOffset(offset), shift(), flip()],
@@ -52,10 +66,19 @@ const FloatingPopup = ({
   });
 
   const floatingRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
+  const [anchorX, setAnchorX] = useState<number | null>(null);
   const [adjustedPos, setAdjustedPos] = useState<{
     x: number;
     y: number;
   } | null>(null);
+  const isFixed = typeof fixedX === 'number' && typeof fixedY === 'number';
+  const ready = isFixed ? adjustedPos !== null : x !== null && y !== null;
+  const popupPresence = usePopupPresence(open, {
+    ready,
+    motionRef: floatingRef,
+  });
 
   useEffect(() => {
     if (referenceRef && referenceRef.current)
@@ -97,6 +120,32 @@ const FloatingPopup = ({
   }, [open, autoClose, onClose, referenceRef, refs.floating]);
 
   useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      openerRef.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      wasOpenRef.current = true;
+      return;
+    }
+    if (!open && wasOpenRef.current) {
+      wasOpenRef.current = false;
+      const opener = openerRef.current;
+      if (restoreFocus && opener?.isConnected) opener.focus();
+    }
+  }, [open, restoreFocus]);
+
+  useEffect(
+    () => () => {
+      const opener = openerRef.current;
+      if (restoreFocus && wasOpenRef.current && opener?.isConnected) {
+        opener.focus();
+      }
+    },
+    [restoreFocus],
+  );
+
+  useEffect(() => {
     if (open) update?.();
   }, [open, update]);
 
@@ -124,7 +173,7 @@ const FloatingPopup = ({
       typeof fixedX !== 'number' ||
       typeof fixedY !== 'number'
     ) {
-      setAdjustedPos(null);
+      if (open) setAdjustedPos(null);
       return;
     }
 
@@ -244,9 +293,45 @@ const FloatingPopup = ({
     };
   }, [open, autoClose, onClose, referenceRef, interactiveRefs]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (
+      !open ||
+      !popupPresence.mounted ||
+      !referenceRef?.current ||
+      !floatingRef.current
+    ) {
+      return;
+    }
 
-  const isFixed = typeof fixedX === 'number' && typeof fixedY === 'number';
+    const reference = referenceRef.current;
+    const popup = floatingRef.current;
+    const updateAnchor = () => {
+      const referenceRect = reference.getBoundingClientRect();
+      const offsetParent = popup.offsetParent;
+      const popupLeft =
+        offsetParent instanceof HTMLElement
+          ? offsetParent.getBoundingClientRect().left + popup.offsetLeft
+          : popup.offsetLeft;
+      const edgeInset = 12;
+      const targetX = referenceRect.left + referenceRect.width / 2 - popupLeft;
+      const nextAnchorX = Math.min(
+        Math.max(targetX, edgeInset),
+        Math.max(edgeInset, popup.offsetWidth - edgeInset),
+      );
+
+      setAnchorX((current) =>
+        current !== null && Math.abs(current - nextAnchorX) < 0.25
+          ? current
+          : nextAnchorX,
+      );
+    };
+
+    updateAnchor();
+    const frame = requestAnimationFrame(updateAnchor);
+    return () => cancelAnimationFrame(frame);
+  }, [adjustedPos, open, popupPresence.mounted, referenceRef, x, y]);
+
+  if (!popupPresence.mounted) return null;
 
   // 고정 좌표를 사용할 때는 조정된 위치, 아니면 기본 위치를 사용합
   let left: number;
@@ -264,20 +349,31 @@ const FloatingPopup = ({
     top = (y ?? 0) + offsetY;
   }
 
+  const floatingStyle: React.CSSProperties & {
+    '--dmn-popup-anchor-x'?: string;
+  } = {
+    position: isFixed ? 'fixed' : strategy,
+    left,
+    top,
+  };
+  if (anchorX !== null) {
+    floatingStyle['--dmn-popup-anchor-x'] = `${anchorX}px`;
+  }
+
   const floatingContent = (
     <div
+      data-dmn-app-portal
+      data-dmn-motion-state={popupPresence.state}
+      data-dmn-placement={resolvedPlacement}
       ref={(node) => {
         refs.setFloating(node);
         floatingRef.current = node;
       }}
-      style={{
-        position: isFixed ? 'fixed' : strategy,
-        left,
-        top,
-      }}
-      className={`${className} tooltip-fade-in`}
-      role="dialog"
-      aria-modal="false"
+      style={floatingStyle}
+      className={`dmn-popup-surface dmn-motion ${className}`}
+      role={role}
+      aria-label={ariaLabel}
+      aria-modal={role === 'dialog' ? 'false' : undefined}
     >
       {children}
     </div>

@@ -263,7 +263,7 @@ const WebFontInputModal = ({
   return (
     <Modal onClick={handleClose}>
       <div
-        className="w-[640px] max-w-[calc(100vw-80px)] flex flex-col bg-[#1A191E] rounded-[10px] border border-[#2A2A30] overflow-hidden"
+        className="dmn-manager-surface w-[640px] max-w-[calc(100vw-80px)] flex flex-col overflow-hidden"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="h-[37px] bg-[#2A2A30] border-b border-[#3A3943] px-[12px] flex items-center justify-between">

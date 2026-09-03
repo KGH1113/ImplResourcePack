@@ -1,0 +1,119 @@
+:root {
+  color-scheme: dark;
+
+  --ui-bg-app: #131315;
+  --ui-bg-panel: #1b1b1d;
+  --ui-bg-panel-detached: #202024;
+  --ui-bg-surface: #232325;
+  --ui-bg-surface-hover: #2a2a2d;
+  --ui-bg-surface-active: #303034;
+  --ui-bg-elevated: #29292d;
+  --ui-bg-inset: #101012;
+  --ui-bg-glass: rgba(27, 27, 29, 0.88);
+
+  --ui-line-subtle: rgba(255, 255, 255, 0.08);
+  --ui-line: rgba(255, 255, 255, 0.13);
+  --ui-line-strong: rgba(255, 255, 255, 0.2);
+
+  --ui-fg-primary: #f5f5f7;
+  --ui-fg-secondary: #b3b3bd;
+  --ui-fg-muted: #787882;
+  --ui-fg-disabled: #5d5d65;
+  --ui-fg-inverse: #151517;
+
+  --ui-accent: #8b5cf6;
+  --ui-accent-hover: #9d74f8;
+  --ui-accent-pressed: #7949e8;
+  --ui-accent-soft: rgba(139, 92, 246, 0.16);
+  --ui-success: #42c784;
+  --ui-warning: #f5a524;
+  --ui-danger: #ef5350;
+  --ui-danger-soft: rgba(239, 83, 80, 0.16);
+
+  --ui-radius-inner: 6px;
+  --ui-radius-control: 8px;
+  --ui-radius-surface: 10px;
+  --ui-radius-popup: 14px;
+  --ui-radius-modal: 16px;
+  --ui-radius-round: 999px;
+
+  /*
+   * App density scale. Keep application chrome on this small, deliberate
+   * rhythm instead of introducing one-off gaps in individual screens.
+   * Viewer geometry intentionally does not consume these tokens.
+   */
+  --ui-space-1: 4px;
+  --ui-space-2: 6px;
+  --ui-space-3: 8px;
+  --ui-space-4: 10px;
+  --ui-space-5: 12px;
+  --ui-space-6: 14px;
+  --ui-space-7: 16px;
+  --ui-space-8: 20px;
+  --ui-space-9: 24px;
+
+  --ui-control-height-sm: 23px;
+  --ui-control-height-md: 30px;
+  --ui-form-row-height: 32px;
+  --ui-settings-row-height: 36px;
+  --ui-panel-header-height: 48px;
+  --ui-properties-panel-width: 240px;
+
+  /* Typography is a size/leading/weight set, never a standalone font size. */
+  --ui-type-caption-size: 11px;
+  --ui-type-caption-line: 16px;
+  --ui-type-caption-tracking: 0.01em;
+  --ui-type-caption-weight: 500;
+  --ui-type-body-size: 12px;
+  --ui-type-body-line: 18px;
+  --ui-type-body-tracking: 0;
+  --ui-type-body-weight: 500;
+  --ui-type-label-size: 13px;
+  --ui-type-label-line: 18px;
+  --ui-type-label-tracking: 0;
+  --ui-type-label-weight: 500;
+  --ui-type-title-size: 14px;
+  --ui-type-title-line: 20px;
+  --ui-type-title-tracking: -0.01em;
+  --ui-type-title-weight: 600;
+  --ui-type-heading-size: 16px;
+  --ui-type-heading-line: 22px;
+  --ui-type-heading-tracking: -0.014em;
+  --ui-type-heading-weight: 700;
+
+  --ui-motion-fast: 120ms;
+  --ui-motion-base: 180ms;
+  --ui-motion-slow: 240ms;
+  --ui-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ui-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Interaction motion: brief, directional, and shared by every app surface. */
+  --ui-hover-lift: -1px;
+  --ui-press-scale: 0.97;
+  --ui-toggle-duration: 240ms;
+  --ui-toggle-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ui-segment-duration: 220ms;
+  --ui-segment-ease: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --ui-popup-enter-duration: 180ms;
+  --ui-popup-exit-duration: 120ms;
+  --ui-popup-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ui-popup-enter-scale: 0.94;
+  --ui-popup-exit-scale: 0.99;
+  --ui-modal-enter-duration: 250ms;
+  --ui-modal-exit-duration: 150ms;
+  --ui-modal-enter-scale: 0.96;
+  --ui-modal-exit-scale: 0.96;
+
+  --ui-shadow-surface: 0 8px 24px rgba(0, 0, 0, 0.24);
+  --ui-shadow-popup: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --ui-shadow-modal: 0 28px 80px rgba(0, 0, 0, 0.52);
+  --ui-shadow-focus: 0 0 0 3px rgba(139, 92, 246, 0.32);
+
+  --ui-z-canvas: 0;
+  --ui-z-panel: 10;
+  --ui-z-toolbar: 20;
+  --ui-z-tooltip: 70;
+  --ui-z-popup: 80;
+  --ui-z-modal: 100;
+}

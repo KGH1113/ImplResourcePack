@@ -1,25 +1,42 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
+import { usePopupPresence } from '@hooks/ui/usePopupPresence';
 
-interface DropdownOption {
+export interface DropdownOption {
   label: string;
   value: string;
 }
 
-interface DropdownProps {
+export interface DropdownProps {
   options: DropdownOption[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  /** true일 경우 드롭다운이 부모 컨테이너의 전체 너비를 차지함 */
   fullWidth?: boolean;
-  /** 아이콘 트리거 모드: 설정 시 버튼이 아이콘으로 표시됨 */
   iconTrigger?: React.ReactNode;
-  /** 메뉴 수평 정렬 (기본: left) */
   align?: 'left' | 'center' | 'right';
-  /** 트리거/메뉴 너비 고정용 Tailwind 클래스 (예: 'w-[160px]'). 길면 말줄임(...) 처리됨 */
   widthClass?: string;
+  ariaLabel?: string;
 }
+
+interface MenuPosition {
+  left: number;
+  top: number;
+  width?: number;
+  placement: 'top-start' | 'bottom-start';
+}
+
+const VIEWPORT_PADDING = 5;
+const MENU_GAP = 4;
+const BOTTOM_CHROME_PADDING = 60;
 
 const Dropdown: React.FC<DropdownProps> = ({
   options,
@@ -31,136 +48,262 @@ const Dropdown: React.FC<DropdownProps> = ({
   iconTrigger,
   align = 'left',
   widthClass = '',
+  ariaLabel,
 }) => {
   const [open, setOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [position, setPosition] = useState<MenuPosition | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+  const selectedIndex = options.findIndex((option) => option.value === value);
+  const selected = selectedIndex >= 0 ? options[selectedIndex] : undefined;
+  const popupPresence = usePopupPresence(open, {
+    ready: position !== null,
+    motionRef: menuRef,
+  });
 
-  // 드롭다운 열릴 때 위치 계산
+  const close = useCallback((restoreFocus = false) => {
+    setOpen(false);
+    if (restoreFocus) buttonRef.current?.focus();
+  }, []);
+
+  const openMenu = useCallback(
+    (preferredIndex?: number) => {
+      if (disabled) return;
+      setActiveIndex(
+        options.length === 0
+          ? -1
+          : (preferredIndex ?? (selectedIndex >= 0 ? selectedIndex : 0)),
+      );
+      setOpen(true);
+    },
+    [disabled, options.length, selectedIndex],
+  );
+
+  const selectOption = useCallback(
+    (index: number) => {
+      const option = options[index];
+      if (!option) return;
+      onChange(option.value);
+      close(true);
+    },
+    [close, onChange, options],
+  );
+
+  const placeMenu = useCallback(() => {
+    const button = buttonRef.current;
+    const menu = menuRef.current;
+    if (!button || !menu) return;
+
+    const anchor = button.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+    const menuWidth = fullWidth ? anchor.width : menuRect.width;
+    const menuHeight = menuRect.height;
+    let left = anchor.left;
+    if (align === 'right') left = anchor.right - menuWidth;
+    if (align === 'center') left = anchor.left + (anchor.width - menuWidth) / 2;
+    left = Math.min(
+      Math.max(left, VIEWPORT_PADDING),
+      Math.max(
+        VIEWPORT_PADDING,
+        window.innerWidth - menuWidth - VIEWPORT_PADDING,
+      ),
+    );
+
+    const availableBelow =
+      window.innerHeight - anchor.bottom - BOTTOM_CHROME_PADDING;
+    const availableAbove = anchor.top - VIEWPORT_PADDING;
+    const openUpward =
+      availableBelow < menuHeight + MENU_GAP && availableAbove > availableBelow;
+    const desiredTop = openUpward
+      ? anchor.top - menuHeight - MENU_GAP
+      : anchor.bottom + MENU_GAP;
+    const top = Math.min(
+      Math.max(desiredTop, VIEWPORT_PADDING),
+      Math.max(
+        VIEWPORT_PADDING,
+        window.innerHeight - menuHeight - VIEWPORT_PADDING,
+      ),
+    );
+
+    setPosition({
+      left,
+      top,
+      width: fullWidth ? anchor.width : undefined,
+      placement: openUpward ? 'top-start' : 'bottom-start',
+    });
+  }, [align, fullWidth]);
+
+  useLayoutEffect(() => {
+    if (!open || !popupPresence.mounted) return;
+    placeMenu();
+  }, [open, options.length, placeMenu, popupPresence.mounted]);
+
   useEffect(() => {
-    if (open && buttonRef.current) {
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-
-      // 하단 메뉴 높이 고려 (약 50px)
-      const bottomPadding = 60;
-
-      // 드롭다운 메뉴 예상 높이 (옵션당 25px + padding)
-      const estimatedMenuHeight = Math.min(options.length * 25 + 4, 200);
-
-      // 버튼 아래 공간이 부족하면 위로 펼치기
-      const spaceBelow = viewportHeight - buttonRect.bottom - bottomPadding;
-      setOpenUpward(spaceBelow < estimatedMenuHeight);
-    }
-  }, [open, options.length]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        rootRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
       }
+      close();
     };
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    const handleResize = () => placeMenu();
+    const handleScroll = () => close();
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('scroll', handleScroll, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('scroll', handleScroll, true);
     };
-  }, [open]);
+  }, [close, open, placeMenu]);
 
-  const selected = options.find((opt) => opt.value === value);
+  const moveActive = (direction: 1 | -1) => {
+    if (options.length === 0) return;
+    const current = activeIndex >= 0 ? activeIndex : selectedIndex;
+    const next =
+      (Math.max(current, 0) + direction + options.length) % options.length;
+    setActiveIndex(next);
+  };
 
-  return (
-    <div
-      ref={ref}
-      className={`relative ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
-    >
-      {iconTrigger ? (
-        <button
-          ref={buttonRef}
-          type="button"
-          className={`flex items-center justify-center w-[23px] h-[23px] rounded-[7px] border-[1px] cursor-pointer transition-colors ${
-            open
-              ? 'border-[#459BF8] bg-[#2A2A31]'
-              : 'border-[#3A3943] bg-[#2A2A31] hover:border-[#505058]'
-          }`}
-          onClick={() => setOpen((prev) => !prev)}
-          disabled={disabled}
-        >
-          {iconTrigger}
-        </button>
-      ) : (
-        <button
-          ref={buttonRef}
-          type="button"
-          className={`flex box-border items-center justify-between h-[23px] py-[0px] px-[8px] bg-[#2A2A31] border-[1px] border-[#3A3944] rounded-[7px] text-[#DBDEE8] text-style-2 outline-none ${
-            fullWidth ? 'w-full' : ''
-          } ${widthClass}`}
-          onClick={() => setOpen((prev) => !prev)}
-          disabled={disabled}
-        >
-          <span
-            className={`truncate leading-[23px] ${
-              !selected ? 'text-[#DBDEE8]' : ''
-            }`}
-          >
-            {selected ? selected.label : placeholder}
-          </span>
-          <svg
-            width="8"
-            height="5"
-            viewBox="0 0 14 8"
-            fill="none"
-            className={`ml-[5px] transition-transform duration-200 ${
-              open ? 'rotate-180' : 'rotate-0'
-            }`}
-          >
-            <path
-              d="M1 1L7 7L13 1"
-              stroke="#DBDEE8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      )}
-      {open && (
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Escape' && open) {
+      event.preventDefault();
+      close(true);
+      return;
+    }
+    if (event.key === 'Tab' && open) {
+      close();
+      return;
+    }
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      if (options.length === 0) {
+        openMenu();
+        return;
+      }
+      if (!open) openMenu(event.key === 'Home' ? 0 : options.length - 1);
+      else setActiveIndex(event.key === 'Home' ? 0 : options.length - 1);
+      return;
+    }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!open) {
+        const fallback = event.key === 'ArrowDown' ? 0 : options.length - 1;
+        openMenu(selectedIndex >= 0 ? selectedIndex : fallback);
+      } else {
+        moveActive(event.key === 'ArrowDown' ? 1 : -1);
+      }
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (!open) openMenu();
+      else selectOption(activeIndex >= 0 ? activeIndex : selectedIndex);
+    }
+  };
+
+  useEffect(() => {
+    if (!popupPresence.mounted) setPosition(null);
+  }, [popupPresence.mounted]);
+
+  const floatingMenu = popupPresence.mounted
+    ? createPortal(
         <div
-          className={`absolute flex flex-col justify-center items-center p-[1px] bg-[#2A2A31] border-[1px] border-[#3A3944] rounded-[7px] z-20 overflow-x-hidden overflow-y-auto gap-[2px] max-h-[200px] ${
-            fullWidth
-              ? 'left-0 right-0'
-              : align === 'right'
-                ? 'right-0'
-                : align === 'center'
-                  ? 'left-1/2 -translate-x-1/2'
-                  : 'left-0'
-          } ${widthClass} ${openUpward ? 'bottom-[25px]' : 'top-[25px]'}`}
+          ref={menuRef}
+          id={menuId}
+          data-dmn-app-portal
+          role="listbox"
+          aria-label={ariaLabel}
+          data-dmn-motion-state={popupPresence.state}
+          data-dmn-placement={position?.placement ?? 'bottom-start'}
+          className={`dmn-dropdown-menu dmn-motion ${widthClass}`}
+          style={{
+            position: 'fixed',
+            left: position?.left ?? 0,
+            top: position?.top ?? 0,
+            width: position?.width,
+            visibility: position ? 'visible' : 'hidden',
+          }}
         >
           {options.length === 0 ? (
-            <div className="px-4 py-3 text-[#9AA0AA] text-[18px] font-medium">
+            <div className="dmn-dropdown-empty" role="status">
               옵션 없음
             </div>
           ) : (
-            options.map((opt) => (
+            options.map((option, index) => (
               <button
-                key={opt.value}
+                key={option.value}
+                id={`${menuId}-option-${index}`}
                 type="button"
-                className={`text-left w-full h-[23px] px-[13px] py-[0px] rounded-[7px] text-style-2 text-[#DBDEE8] transition-colors duration-100 flex items-center bg-[#2A2A31] hover:bg-[#24232A] ${
-                  value === opt.value ? '!bg-[#24232A] pointer-events-none' : ''
-                }`}
-                onClick={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
+                role="option"
+                aria-selected={option.value === value}
+                data-active={index === activeIndex || undefined}
+                className="dmn-dropdown-option"
+                tabIndex={-1}
+                onPointerMove={() => setActiveIndex(index)}
+                onClick={() => selectOption(index)}
               >
-                <span className="truncate leading-[23px]">{opt.label}</span>
+                <span>{option.label}</span>
               </button>
             ))
           )}
-        </div>
-      )}
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div ref={rootRef} className={`relative ${fullWidth ? 'w-full' : ''}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className={`dmn-dropdown-trigger ${iconTrigger ? 'dmn-dropdown-trigger--icon' : ''} ${
+          fullWidth ? 'w-full' : ''
+        } ${widthClass}`}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        aria-activedescendant={
+          open && activeIndex >= 0
+            ? `${menuId}-option-${activeIndex}`
+            : undefined
+        }
+        disabled={disabled}
+        onClick={() => (open ? close() : openMenu())}
+        onKeyDown={handleKeyDown}
+      >
+        {iconTrigger ?? (
+          <>
+            <span className="truncate">{selected?.label ?? placeholder}</span>
+            <svg
+              width="8"
+              height="5"
+              viewBox="0 0 14 8"
+              fill="none"
+              className="dmn-dropdown-chevron"
+              aria-hidden="true"
+            >
+              <path
+                d="M1 1L7 7L13 1"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </>
+        )}
+      </button>
+      {floatingMenu}
     </div>
   );
 };

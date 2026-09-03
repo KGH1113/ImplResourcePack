@@ -29,6 +29,8 @@
     "licenses:check": "node scripts/generate-third-party-licenses.cjs --check",
     "version": "npm run sync-version && git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml",
     "test": "vitest run && node --test scripts/*.test.cjs",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
@@ -48,6 +50,7 @@
   "license": "GPL-3.0-only",
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.62.1",
     "@preact/signals-react": "^3.3.1",
     "@tauri-apps/cli": "~2.11.4",
     "@types/node": "^22.15.27",

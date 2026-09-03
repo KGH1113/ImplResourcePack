@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { PANEL_ROOT_CLASS } from '../panelChrome';
 import type { ImageFit, KeyPosition } from '@src/types/key/keys';
 import type { StatItemPosition, StatItemType } from '@src/types/key/statItems';
 import type {
@@ -132,11 +133,8 @@ export const PluginSelectionPanel: React.FC<PluginSelectionPanelProps> = ({
   t,
 }) => {
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
-      <div className="flex items-center justify-between p-[12px] border-b border-[#3A3943]">
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
+      <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
         <span className="text-[#DBDEE8] text-style-2 truncate max-w-[120px]">
           {pluginTitle}
         </span>
@@ -315,11 +313,8 @@ export const SingleGraphPanel: React.FC<SingleGraphPanelProps> = ({
   const graphTitle = singleGraphPosition.layerName || graphDefaultTitle;
 
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
-      <div className="flex items-center justify-between p-[12px] border-b border-[#3A3943]">
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
+      <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
         {isRenaming ? (
           <input
             ref={renameInputRef}
@@ -960,11 +955,8 @@ export const SingleKnobPanel: React.FC<SingleKnobPanelProps> = ({
     );
 
   return (
-    <div
-      ref={setRef}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
-      <div className="flex items-center justify-between p-[12px] border-b border-[#3A3943]">
+    <div ref={setRef} className={PANEL_ROOT_CLASS}>
+      <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
         {isRenaming ? (
           <input
             ref={renameInputRef}
@@ -1525,14 +1517,11 @@ export const SingleKeyStatPanel: React.FC<SingleKeyStatPanelProps> = ({
   ) : undefined;
 
   return (
-    <div
-      ref={setPanelElement}
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-    >
+    <div ref={setPanelElement} className={PANEL_ROOT_CLASS}>
       {/* 헤더 + 탭 영역 */}
-      <div className="flex-shrink-0 border-b border-[#3A3943]">
+      <div className="dmn-properties-panel__head-stack flex-shrink-0">
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-[12px] pb-[8px]">
+        <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
           {isRenaming ? (
             <input
               ref={renameInputRef}

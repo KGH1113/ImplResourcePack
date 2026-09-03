@@ -229,6 +229,7 @@ const MenuItemRow = ({
     return (
       <button
         type="button"
+        role="menuitem"
         disabled={item.disabled}
         onClick={handleSelect}
         className={`w-full min-w-[108px] h-[24px] px-[24px] rounded-[7px] flex items-center justify-center ${
@@ -257,6 +258,7 @@ const MenuItemRow = ({
       <button
         ref={rowRef}
         type="button"
+        role="menuitem"
         disabled={item.disabled}
         onClick={handleSelect}
         className={`w-full min-w-[120px] h-[24px] px-[6px] rounded-[5px] flex items-center gap-[4px] ${
@@ -380,6 +382,7 @@ const ListPopup = ({
       fixedX={position?.x}
       fixedY={position?.y}
       onClose={onClose}
+      role="menu"
       className={effectiveClassName}
     >
       <div

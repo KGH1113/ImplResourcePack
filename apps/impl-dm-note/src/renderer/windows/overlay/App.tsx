@@ -31,6 +31,7 @@ import type { KnobItemPosition } from '@src/types/key/knobs';
 import { usePluginDisplayElementStore } from '@stores/plugin/usePluginDisplayElementStore';
 import OverlayScene from '@components/shared/OverlayScene';
 import { computeLayout } from '@hooks/shared/useLayoutComputation';
+import { isKeyMappedToViewer } from './keyStateRouting';
 
 type KeyDelayTimerEntry = { timers: Set<ReturnType<typeof setTimeout>> };
 
@@ -434,6 +435,46 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedKeyType]);
 
+  // 이벤트 구독은 오버레이 윈도우 수명 동안 한 번만 유지한다. 다른 viewer의
+  // 탭 변경도 tabs 스토어를 갱신해 이 컴포넌트를 다시 렌더하므로, 렌더마다 새로
+  // 만들어지는 note handler를 effect dependency로 사용하면 hand 신호까지
+  // cleanup에서 초기화된다. 구독 콜백은 ref를 통해 최신 컨텍스트만 읽는다.
+  const keyEventContextRef = useRef({
+    noteEffect,
+    keyMappings,
+    positions,
+    selectedKeyType,
+    handleKeyDown,
+    handleKeyUp,
+  });
+  useEffect(() => {
+    keyEventContextRef.current = {
+      noteEffect,
+      keyMappings,
+      positions,
+      selectedKeyType,
+      handleKeyDown,
+      handleKeyUp,
+    };
+  });
+
+  // 이 viewer가 실제로 다른 탭으로 전환될 때만 예약된 표시와 눌림 신호를
+  // 초기화한다. foot 전환으로 hand가 단순 재렌더되는 경우에는 실행되지 않는다.
+  const keySignalResetArmedRef = useRef(false);
+  useEffect(() => {
+    if (!keySignalResetArmedRef.current) {
+      keySignalResetArmedRef.current = true;
+      return;
+    }
+    const keyDelayTimers = keyDelayTimersRef.current;
+    keyDelayTimers.forEach((timerEntry) => {
+      timerEntry.timers.forEach((timer) => clearTimeout(timer));
+      timerEntry.timers.clear();
+    });
+    keyDelayTimers.clear();
+    resetAllKeySignals();
+  }, [selectedKeyType]);
+
   useEffect(() => {
     // 키 딜레이 적용된 신호 업데이트
     const updateKeySignalWithDelay = (key: string, isDown: boolean) => {
@@ -459,55 +500,72 @@ export default function App() {
       timerEntry.timers.add(timer);
     };
 
-    // 키 이벤트 버스 초기화 (백엔드에서 한 번만 구독)
-    import('@utils/core/keyEventBus').then(({ keyEventBus }) => {
-      keyEventBus.initialize();
-    });
-
     // HID 축 이벤트 버스 초기화 (input:axis 구독 → axisSignals 누적)
     import('@utils/core/axisEventBus').then(({ axisEventBus }) => {
       axisEventBus.initialize();
     });
 
-    // 버스를 통해 키 이벤트 수신
+    let disposed = false;
+    // 버스를 통해 키 이벤트 수신. 구독을 먼저 등록하고 initialize하여 초기화
+    // 직후 들어오는 입력도 놓치지 않는다.
     const unsubscribe = import('@utils/core/keyEventBus').then(
       ({ keyEventBus }) => {
-        return keyEventBus.subscribe(({ key, state, eventAgeMs }) => {
-          const isDown = state === 'DOWN';
-          // 키 UI 업데이트 (딜레이 적용)
-          updateKeySignalWithDelay(key, isDown);
-          // 노트 이펙트는 즉시 처리 (딜레이 없음)
-          if (noteEffect) {
-            // 개별 키의 noteEffectEnabled 확인
-            const currentKeys = keyMappings[selectedKeyType] ?? [];
-            const currentPositions = positions[selectedKeyType] ?? [];
-            const keyIndex = currentKeys.indexOf(key);
-            const keyPosition = currentPositions[keyIndex];
-            const keyNoteEffectEnabled =
-              keyPosition?.noteEffectEnabled !== false;
+        if (disposed) return undefined;
+        const unsubscribeKeyEvents = keyEventBus.subscribe(
+          ({ key, state, eventAgeMs }) => {
+            const context = keyEventContextRef.current;
+            // 전용 viewer의 실제 선택 탭 매핑을 최종 라우팅 기준으로 삼는다.
+            // 전역 편집 mode는 마지막으로 선택한 hand/foot 탭을 가리키므로,
+            // payload mode를 검사하면 foot 선택 중 hand 입력 전체가 차단된다.
+            const currentKeys =
+              context.keyMappings[context.selectedKeyType] ?? [];
+            if (
+              !isKeyMappedToViewer(
+                key,
+                context.selectedKeyType,
+                context.keyMappings,
+              )
+            )
+              return;
+            const isDown = state === 'DOWN';
+            // 키 UI 업데이트 (딜레이 적용)
+            updateKeySignalWithDelay(key, isDown);
+            // 노트 이펙트는 즉시 처리 (딜레이 없음)
+            if (context.noteEffect) {
+              // 개별 키의 noteEffectEnabled 확인
+              const currentPositions =
+                context.positions[context.selectedKeyType] ?? [];
+              const keyIndex = currentKeys.indexOf(key);
+              const keyPosition = currentPositions[keyIndex];
+              const keyNoteEffectEnabled =
+                keyPosition?.noteEffectEnabled !== false;
 
-            if (keyNoteEffectEnabled) {
-              // 실제 입력 시각을 복원해 노트 시작 위치를 보정 (프레임 양자화 방지).
-              // requestAnimationFrame 래핑 시 노트 생성 시각이 프레임 경계로 양자화돼
-              // 주사율/OBS fps에 시간 해상도가 종속되던 문제 해결.
-              // age는 0~MAX_EVENT_AGE_MS로 clamp — 백엔드 stall/클럭 이상 시 노트가
-              // 화면 위로 튀는 것을 방지
-              const age = Math.min(
-                Math.max(eventAgeMs ?? 0, 0),
-                MAX_EVENT_AGE_MS,
-              );
-              const inputTime = performance.now() - age;
-              if (isDown) handleKeyDown(key, inputTime);
-              else handleKeyUp(key, inputTime);
+              if (isDown ? keyNoteEffectEnabled : true) {
+                // 실제 입력 시각을 복원해 노트 시작 위치를 보정 (프레임 양자화 방지).
+                // requestAnimationFrame 래핑 시 노트 생성 시각이 프레임 경계로 양자화돼
+                // 주사율/OBS fps에 시간 해상도가 종속되던 문제 해결.
+                // age는 0~MAX_EVENT_AGE_MS로 clamp — 백엔드 stall/클럭 이상 시 노트가
+                // 화면 위로 튀는 것을 방지
+                const age = Math.min(
+                  Math.max(eventAgeMs ?? 0, 0),
+                  MAX_EVENT_AGE_MS,
+                );
+                const inputTime = performance.now() - age;
+                if (isDown) context.handleKeyDown(key, inputTime);
+                else context.handleKeyUp(key, inputTime);
+              }
             }
-          }
-        });
+          },
+        );
+        keyEventBus.initialize();
+        return unsubscribeKeyEvents;
       },
     );
 
     const keyDelayTimers = keyDelayTimersRef.current;
 
     return () => {
+      disposed = true;
       unsubscribe.then((unsub) => {
         try {
           unsub?.();
@@ -521,17 +579,10 @@ export default function App() {
         timerEntry.timers.clear();
       });
       keyDelayTimers.clear();
-      // 안전하게 모든 키 신호 초기화(선택적)
+      // 마운트 1회 effect이므로 실제 윈도우 언마운트에서만 실행된다.
       resetAllKeySignals();
     };
-  }, [
-    handleKeyDown,
-    handleKeyUp,
-    noteEffect,
-    keyMappings,
-    positions,
-    selectedKeyType,
-  ]);
+  }, []);
 
   const currentKeys = keyMappings[selectedKeyType] ?? [];
   const currentPositions = positions[selectedKeyType] ?? [];

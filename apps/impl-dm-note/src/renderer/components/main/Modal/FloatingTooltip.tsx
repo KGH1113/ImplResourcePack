@@ -1,4 +1,5 @@
 import React, { useState, useRef, useId, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import {
   useFloating,
   offset,
@@ -31,6 +32,7 @@ const FloatingTooltip = ({
 
   const { x, y, refs, strategy, middlewareData } = useFloating({
     placement,
+    strategy: 'fixed',
     middleware: [offset(8), flip(), shift(), arrow({ element: arrowRef })],
     whileElementsMounted: autoUpdate,
   });
@@ -111,6 +113,19 @@ const FloatingTooltip = ({
     };
   }, []);
 
+  React.useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelOpenTimer();
+      setOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [open]);
+
   const arrowX = middlewareData.arrow?.x ?? 0;
   const arrowY = middlewareData.arrow?.y ?? 0;
 
@@ -147,31 +162,33 @@ const FloatingTooltip = ({
       >
         {children}
       </div>
-      {open && !disabled && (
-        <div
-          id={id}
-          ref={refs.setFloating}
-          role="tooltip"
-          style={{
-            position: strategy,
-            top: y ?? 0,
-            left: x ?? 0,
-            zIndex: 90,
-          }}
-          className={
-            shouldAnimateOpenRef.current ? 'tooltip-fade-in' : undefined
-          }
-        >
-          <div className="bg-[#1E1E22] text-[#EDEDED] text-[12px] px-2 py-1 rounded-md shadow-sm whitespace-nowrap">
-            {content}
-          </div>
+      {open &&
+        !disabled &&
+        createPortal(
           <div
-            ref={arrowRef}
-            style={arrowStyle}
-            className="w-[8px] h-[8px] rotate-45 bg-[#1E1E22] absolute pointer-events-none"
-          />
-        </div>
-      )}
+            id={id}
+            ref={refs.setFloating}
+            data-dmn-app-portal
+            role="tooltip"
+            style={{
+              position: strategy,
+              top: y ?? 0,
+              left: x ?? 0,
+              zIndex: 'var(--ui-z-tooltip)',
+            }}
+            className={`pointer-events-none ${
+              shouldAnimateOpenRef.current ? 'tooltip-fade-in' : ''
+            }`}
+          >
+            <div className="dmn-tooltip-surface">{content}</div>
+            <div
+              ref={arrowRef}
+              style={arrowStyle}
+              className="dmn-tooltip-arrow"
+            />
+          </div>,
+          document.body,
+        )}
     </>
   );
 };

@@ -52,7 +52,7 @@ const Palette = ({ color, onColorChange }: PaletteProps) => {
 
   return (
     <div
-      className="flex flex-col justify-between rounded-[13px] bg-button-primary border-button-hover border-[1px] p-[8px]"
+      className="dmn-picker-surface flex flex-col justify-between p-[8px]"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="grid grid-cols-5 gap-x-[8px] gap-y-[8px]">

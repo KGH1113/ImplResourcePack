@@ -13,6 +13,8 @@ import type {
 } from './types';
 import { TABS } from './types';
 import ColorPicker from '@components/main/Modal/content/pickers/ColorPicker';
+import Dropdown from '@components/main/common/Dropdown';
+import Toggle from '@components/main/common/Toggle';
 
 // ============================================================================
 // 속성 행
@@ -22,9 +24,9 @@ export const PropertyRow: React.FC<PropertyRowProps> = ({
   label,
   children,
 }) => (
-  <div className="flex justify-between items-center w-full min-h-[23px]">
-    <p className="text-white text-style-2">{label}</p>
-    <div className="flex items-center gap-[10.5px]">{children}</div>
+  <div className="dmn-property-row flex min-h-[32px] w-full items-center justify-between">
+    <p className="dmn-property-row__label">{label}</p>
+    <div className="flex items-center gap-[8px]">{children}</div>
   </div>
 );
 
@@ -43,6 +45,9 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   width = '54px',
   allowDecimal = false,
   decimalScale = 1,
+  step = 1,
+  ariaLabel,
+  disabled = false,
   isMixed = false,
   mixedPlaceholder = 'Mixed',
 }) => {
@@ -127,6 +132,30 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   // 숫자, 마이너스, 소수점(옵션), 백스페이스, Delete, 화살표, Tab, Enter만 허용
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.currentTarget.blur();
+      return;
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const parsed = parseAndClamp(sanitizeNumericInput(localValue));
+      const fallback = typeof value === 'number' ? value : Number(value) || 0;
+      const direction = e.key === 'ArrowUp' ? 1 : -1;
+      const next = normalizePrecision(
+        Math.min(
+          Math.max(
+            (parsed ?? fallback) + direction * step * (e.shiftKey ? 10 : 1),
+            min,
+          ),
+          max,
+        ),
+      );
+      setLocalValue(String(next));
+      setHasUserInput(true);
+      onChange(next);
+      return;
+    }
     const allowedKeys = [
       'Backspace',
       'Delete',
@@ -230,6 +259,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
     return (
       <input
         type="text"
+        aria-label={ariaLabel}
+        disabled={disabled}
         inputMode={supportsDecimal ? 'decimal' : 'numeric'}
         value={localValue}
         onChange={handleChange}
@@ -237,7 +268,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={showMixedPlaceholder ? mixedPlaceholder : undefined}
-        className={`text-center h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
+        className={`dmn-number-field text-center h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
           isFocused ? 'border-[#459BF8]' : 'border-[#3A3943]'
         } text-style-4 ${
           showMixedPlaceholder
@@ -251,7 +282,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   return (
     <div
-      className={`relative h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
+      className={`dmn-number-field relative h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
         isFocused ? 'border-[#459BF8]' : 'border-[#3A3943]'
       }`}
       style={{ width }}
@@ -263,6 +294,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
       )}
       <input
         type="text"
+        aria-label={ariaLabel}
+        disabled={disabled}
         inputMode={supportsDecimal ? 'decimal' : 'numeric'}
         value={localValue}
         onChange={handleChange}
@@ -301,6 +334,9 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
   allowNegative = false,
   allowDecimal = false,
   decimalScale = 1,
+  step = 1,
+  ariaLabel,
+  disabled = false,
   isMixed = false,
   mixedPlaceholder = 'Mixed',
 }) => {
@@ -376,6 +412,28 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
   }, [value, isFocused, isMixed]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.currentTarget.blur();
+      return;
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const parsed = Number(sanitizeInput(localValue));
+      const base =
+        Number.isFinite(parsed) && localValue !== '' ? parsed : (value ?? 0);
+      const direction = e.key === 'ArrowUp' ? 1 : -1;
+      const next = normalizePrecision(
+        Math.min(
+          Math.max(base + direction * step * (e.shiftKey ? 10 : 1), min),
+          max,
+        ),
+      );
+      setLocalValue(String(next));
+      setHasUserInput(true);
+      onChange(next);
+      return;
+    }
     const allowedKeys = [
       'Backspace',
       'Delete',
@@ -478,7 +536,7 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
   if (prefix) {
     return (
       <div
-        className={`relative h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
+        className={`dmn-number-field relative h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
           isFocused ? 'border-[#459BF8]' : 'border-[#3A3943]'
         }`}
         style={{ width }}
@@ -490,6 +548,8 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
         )}
         <input
           type="text"
+          aria-label={ariaLabel}
+          disabled={disabled}
           inputMode={inputMode}
           value={localValue}
           onChange={handleChange}
@@ -511,6 +571,8 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
     return (
       <input
         type="text"
+        aria-label={ariaLabel}
+        disabled={disabled}
         inputMode={inputMode}
         value={localValue}
         onChange={handleChange}
@@ -518,7 +580,7 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={effectivePlaceholder}
-        className={`text-center h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
+        className={`dmn-number-field text-center h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
           isFocused ? 'border-[#459BF8]' : 'border-[#3A3943]'
         } text-style-4 ${textClass} ${placeholderClass}`}
         style={{ width }}
@@ -529,6 +591,8 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
   return (
     <input
       type="text"
+      aria-label={ariaLabel}
+      disabled={disabled}
       inputMode={inputMode}
       value={localValue}
       onChange={handleChange}
@@ -536,7 +600,7 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       placeholder={effectivePlaceholder}
-      className={`text-center h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
+      className={`dmn-number-field text-center h-[23px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
         isFocused ? 'border-[#459BF8]' : 'border-[#3A3943]'
       } text-style-4 ${textClass} ${placeholderClass}`}
       style={{ width }}
@@ -555,6 +619,8 @@ export const TextInput: React.FC<TextInputProps> = ({
   placeholder,
   width = '90px',
   isMixed = false,
+  ariaLabel,
+  disabled = false,
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
@@ -578,12 +644,14 @@ export const TextInput: React.FC<TextInputProps> = ({
   return (
     <input
       type="text"
+      aria-label={ariaLabel}
+      disabled={disabled}
       value={localValue}
       onChange={handleChange}
       onFocus={() => setIsFocused(true)}
       onBlur={handleBlur}
       placeholder={placeholder}
-      className={`text-center h-[23px] p-[6px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
+      className={`dmn-text-field text-center h-[23px] p-[6px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
         isFocused ? 'border-[#459BF8]' : 'border-[#3A3943]'
       } text-style-4 ${
         isMixed
@@ -760,60 +828,13 @@ export const SelectInput: React.FC<SelectInputProps> = ({
   options,
   onChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`h-[23px] min-w-[70px] bg-[#2A2A30] rounded-[7px] border-[1px] ${
-          isOpen ? 'border-[#459BF8]' : 'border-[#3A3943]'
-        } px-[8px] flex items-center justify-between gap-[4px] hover:border-[#505058] transition-colors`}
-      >
-        <span className="text-style-4 text-[#DBDEE8]">
-          {options.find((opt) => opt.value === value)?.label || value}
-        </span>
-        <svg
-          width="8"
-          height="5"
-          viewBox="0 0 8 5"
-          fill="none"
-          className="flex-shrink-0"
-        >
-          <path
-            d="M1 1L4 4L7 1"
-            stroke="#6B6D75"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute top-[27px] left-0 right-0 bg-[#2A2A30] border border-[#3A3943] rounded-[7px] z-20 overflow-hidden shadow-lg min-w-[70px]">
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full px-[8px] py-[6px] text-left text-style-4 hover:bg-[#32323A] transition-colors ${
-                  value === opt.value ? 'text-[#459BF8]' : 'text-[#DBDEE8]'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    <Dropdown
+      value={value}
+      options={options}
+      onChange={onChange}
+      widthClass="min-w-[70px]"
+    />
   );
 };
 
@@ -825,20 +846,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   checked,
   onChange,
 }) => {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`w-[32px] h-[18px] rounded-full transition-colors relative flex-shrink-0 ${
-        checked ? 'bg-[#459BF8]' : 'bg-[#3A3943]'
-      }`}
-    >
-      <div
-        className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-[16px]' : 'translate-x-[2px]'
-        }`}
-      />
-    </button>
-  );
+  return <Toggle checked={checked} onChange={onChange} />;
 };
 
 // ============================================================================
@@ -846,7 +854,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 // ============================================================================
 
 export const SectionDivider: React.FC = () => (
-  <div className="w-full h-[1px] bg-[#3A3943]" />
+  <div className="dmn-property-divider h-px w-full" />
 );
 
 // ============================================================================
@@ -1009,8 +1017,11 @@ export const FontStyleToggle: React.FC<FontStyleToggleProps> = ({
 
 const TabButton: React.FC<TabButtonProps> = ({ active, onClick, children }) => (
   <button
+    type="button"
+    role="tab"
+    aria-selected={active}
     onClick={onClick}
-    className={`w-full h-[24px] rounded-[7px] text-style-2 transition-colors ${
+    className={`dmn-panel-tab h-[24px] w-full ${
       active
         ? 'bg-[#3A3943] text-white'
         : 'bg-[#26262C] text-[#9395A1] hover:bg-[#303036]'
@@ -1031,7 +1042,10 @@ export const Tabs: React.FC<TabsProps> = ({
     : [TABS.STYLE, TABS.NOTE, TABS.COUNTER];
 
   return (
-    <div className="flex w-full h-[30px] bg-[#26262C] rounded-[7px] items-center p-[3px] gap-[5px]">
+    <div
+      className="dmn-panel-tabs flex h-[30px] w-full items-center gap-[3px] p-[3px]"
+      role="tablist"
+    >
       {tabs.includes(TABS.STYLE) && (
         <TabButton
           active={activeTab === TABS.STYLE}

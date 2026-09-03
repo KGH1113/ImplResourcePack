@@ -47,35 +47,39 @@ const ToolBar = ({
   };
 
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center w-full h-[60px] min-h-[60px] p-[10px] bg-primary border-t border-t-1 border-t-[#2A2A30]">
+    <div className="dmn-toolbar grid h-[60px] min-h-[60px] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center px-[10px] py-[10px]">
       <div className="flex min-w-0 justify-self-start overflow-hidden">
         {isSettingsOpen ? (
           <TooltipGroup>
-            <div className="flex gap-[10px]">
+            <div className="flex gap-[8px]">
               <FloatingTooltip content={t('tooltip.github')}>
                 <button
+                  type="button"
+                  aria-label={t('tooltip.github')}
                   onClick={() =>
                     handleClick('https://github.com/KGH1113/ImplResourcePack')
                   }
-                  className="flex items-center justify-center w-[40px] h-[40px] p-[5px] bg-[#000000] rounded-[7px]"
+                  className="dmn-tool-group flex h-[40px] w-[40px] items-center justify-center p-[5px]"
                 >
-                  <div className="flex h-full w-full items-center justify-center rounded-[7px] hover:bg-button-hover active:bg-button-active">
+                  <div className="dmn-tool-button flex h-full w-full items-center justify-center">
                     <Github className="flex-shrink-0 mb-[3px]" />
                   </div>
                 </button>
               </FloatingTooltip>
               <FloatingTooltip content={t('tooltip.issue')}>
                 <button
+                  type="button"
+                  aria-label={t('tooltip.issue')}
                   onClick={() =>
                     handleClick(
                       'https://github.com/KGH1113/ImplResourcePack/issues',
                     )
                   }
-                  className="flex items-center justify-center w-[127px] h-[40px] p-[5px] bg-[#000000] rounded-[7px]"
+                  className="dmn-tool-group flex h-[40px] w-[112px] items-center justify-center p-[5px]"
                 >
-                  <div className="flex h-full w-full items-center justify-center gap-[8px] rounded-[7px] hover:bg-button-hover active:bg-button-active">
+                  <div className="dmn-tool-button flex h-full w-full items-center justify-center gap-[8px] px-[8px]">
                     <Bug className="flex-shrink-0" />
-                    <p className="text-style-3 text-[#DBDEE8] truncate">
+                    <p className="text-body truncate text-ui-fg-secondary">
                       {/* {t("tooltip.issue")} */}
                       Report
                     </p>
@@ -91,7 +95,7 @@ const ToolBar = ({
       <div className="key-limiter-status-slot flex min-w-0 items-center justify-center px-[12px]">
         <KeyLimiterStatus />
       </div>
-      <div className="flex gap-[10px] justify-self-end">
+      <div className="flex gap-[8px] justify-self-end">
         {!isSettingsOpen && (
           <CanvasTool
             onAddItem={onAddItem}
@@ -132,12 +136,13 @@ const TrackSettingButton = ({
 
   return (
     <TooltipGroup>
-      <div className="flex items-center h-[40px] p-[5px] bg-button-primary rounded-[7px]">
+      <div className="dmn-tool-group flex h-[40px] items-center p-[5px]">
         <FloatingTooltip content={t('tooltip.trackSettings') || '트랙 설정'}>
           <button
             type="button"
+            aria-label={t('tooltip.trackSettings') || '트랙 설정'}
             onClick={onOpenNoteSetting}
-            className="flex items-center justify-center h-[30px] w-[30px] rounded-[7px] transition-colors bg-button-primary hover:bg-button-hover active:bg-button-active"
+            className="dmn-tool-button flex h-[30px] w-[30px] items-center justify-center"
           >
             <NoteIcon />
           </button>

@@ -6,6 +6,7 @@ import { SidebarToggleIcon, ModeToggleIcon } from '../PropertyInputs';
 import { LAYER_PANEL_TABS, type LayerPanelTabType } from '../types';
 import LayerTabContent from './LayerTabContent';
 import GridTabContent from '../GridTabContent';
+import { PANEL_ROOT_CLASS } from '../panelChrome';
 
 // ============================================================================
 // 레이어 패널 Props
@@ -34,8 +35,11 @@ const LayerPanelTabButton: React.FC<LayerPanelTabButtonProps> = ({
   children,
 }) => (
   <button
+    type="button"
+    role="tab"
+    aria-selected={active}
     onClick={onClick}
-    className={`w-full h-[24px] rounded-[7px] text-style-2 transition-colors ${
+    className={`dmn-panel-tab h-[24px] w-full ${
       active
         ? 'bg-[#3A3943] text-white'
         : 'bg-[#26262C] text-[#9395A1] hover:bg-[#303036]'
@@ -60,7 +64,10 @@ const LayerPanelTabs: React.FC<LayerPanelTabsProps> = ({
   onTabChange,
   t,
 }) => (
-  <div className="flex w-full h-[30px] bg-[#26262C] rounded-[7px] items-center p-[3px] gap-[5px]">
+  <div
+    className="dmn-panel-tabs flex h-[30px] w-full items-center gap-[3px] p-[3px]"
+    role="tablist"
+  >
     <LayerPanelTabButton
       active={activeTab === LAYER_PANEL_TABS.LAYER}
       onClick={() => onTabChange(LAYER_PANEL_TABS.LAYER)}
@@ -108,14 +115,11 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
   };
 
   return (
-    <div
-      className="absolute right-0 top-0 bottom-0 w-[220px] bg-[#1F1F24] border-l border-[#3A3943] flex flex-col z-30 shadow-lg"
-      onMouseDown={handleHeaderEmptyClick}
-    >
+    <div className={PANEL_ROOT_CLASS} onMouseDown={handleHeaderEmptyClick}>
       {/* 헤더 + 탭 영역 */}
-      <div className="flex-shrink-0 border-b border-[#3A3943]">
+      <div className="dmn-properties-panel__head-stack flex-shrink-0">
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-[12px] pb-[8px]">
+        <div className="dmn-properties-panel__header flex items-center justify-between px-[12px]">
           <span className="text-[#DBDEE8] text-style-2">
             {t('propertiesPanel.canvas') || 'Canvas'}
           </span>
