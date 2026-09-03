@@ -14,6 +14,7 @@ internal sealed class ComboView : IOverlayView<ComboSnapshot>
   private GameObject _root;
   private Material _comboMaterial;
   private ComboAnimationDriver _animation;
+  private SongTitleMirror _songTitleMirror;
   private TextMeshProUGUI _valueText;
   private int _lastCount = -1;
 
@@ -31,6 +32,32 @@ internal sealed class ComboView : IOverlayView<ComboSnapshot>
       new Vector2(0f, -57f),
       new Vector2(300f, 200f)
     );
+
+    GameObject songTitle = OverlayTextFactory.CreateRect(
+      "SongTitle",
+      _root.transform,
+      new Vector2(0.5f, 1f),
+      new Vector2(0.5f, 1f),
+      new Vector2(0f, 36f),
+      new Vector2(600f, 32f)
+    );
+    TextMeshProUGUI songTitleText = OverlayTextFactory.AddText(
+      songTitle,
+      font,
+      _comboMaterial,
+      24f,
+      TextAlignmentOptions.Center
+    );
+    songTitleText.text = string.Empty;
+    songTitleText.color = Color.white;
+    songTitleText.enableAutoSizing = true;
+    songTitleText.fontSizeMin = 12f;
+    songTitleText.fontSizeMax = 24f;
+    songTitleText.textWrappingMode = TextWrappingModes.NoWrap;
+    songTitleText.overflowMode = TextOverflowModes.Overflow;
+
+    _songTitleMirror = _root.AddComponent<SongTitleMirror>();
+    _songTitleMirror.Initialize(songTitleText);
 
     GameObject title = OverlayTextFactory.CreateRect(
       "ComboTitle",
@@ -95,6 +122,7 @@ internal sealed class ComboView : IOverlayView<ComboSnapshot>
 
   public void Dispose()
   {
+    _songTitleMirror?.Release();
     if (_root != null)
       Object.Destroy(_root);
     if (_comboMaterial != null)
