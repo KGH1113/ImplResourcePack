@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from '@contexts/useTranslation';
 import PlusIcon from '@assets/svgs/plus2.svg';

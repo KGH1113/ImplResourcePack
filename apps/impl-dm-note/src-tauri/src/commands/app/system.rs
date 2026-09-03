@@ -1,7 +1,7 @@
 use tauri::{AppHandle, Manager, State};
 
 use crate::cursor::{get_macos_cursor_settings, rgb_to_hex};
-use crate::errors::CmdResult;
+use crate::errors::{CmdResult, CommandError};
 use crate::state::AppState;
 
 const TRAY_ICON_ID: &str = "background-tray";
@@ -24,10 +24,17 @@ pub fn window_close(app: AppHandle) -> CmdResult<()> {
 
 #[tauri::command]
 pub fn app_open_external(_app: AppHandle, url: String) -> CmdResult<()> {
-    if url.is_empty() {
-        return Ok(());
-    }
+    validate_external_url(&url)?;
     Ok(open::that(url)?)
+}
+
+fn validate_external_url(value: &str) -> CmdResult<()> {
+    let parsed =
+        reqwest::Url::parse(value).map_err(|_| CommandError::msg("invalid external URL"))?;
+    match parsed.scheme() {
+        "https" | "http" | "mailto" => Ok(()),
+        _ => Err(CommandError::msg("external URL scheme is not allowed")),
+    }
 }
 
 #[tauri::command]
@@ -113,5 +120,34 @@ pub fn get_cursor_settings() -> CursorSettingsResponse {
         is_macos: true,
         #[cfg(not(target_os = "macos"))]
         is_macos: false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_external_url;
+
+    #[test]
+    fn accepts_supported_external_url_schemes() {
+        for url in [
+            "https://example.com/release",
+            "http://localhost:3400/docs",
+            "mailto:maintainer@example.com",
+        ] {
+            assert!(validate_external_url(url).is_ok(), "{url}");
+        }
+    }
+
+    #[test]
+    fn rejects_unsupported_or_invalid_external_urls() {
+        for url in [
+            "file:///tmp/private.txt",
+            "javascript:alert(1)",
+            "tauri://localhost",
+            "not a url",
+            "",
+        ] {
+            assert!(validate_external_url(url).is_err(), "{url}");
+        }
     }
 }

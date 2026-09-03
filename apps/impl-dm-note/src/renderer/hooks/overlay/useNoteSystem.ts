@@ -499,27 +499,30 @@ export function useNoteSystem({
         releasedBeforeStart: false,
       };
 
-      const startTimer = setTimeout(() => {
-        state.startTimer = null;
-        if (!noteEffectEnabled.current) {
-          removeState(keyName, state);
-          return;
-        }
+      const startTimer = setTimeout(
+        () => {
+          state.startTimer = null;
+          if (!noteEffectEnabled.current) {
+            removeState(keyName, state);
+            return;
+          }
 
-        const overrideStart = state.downTime! + state.delayMs!;
-        const noteId = createNote(keyName, overrideStart);
-        state.noteId = noteId;
-        state.created = true;
-        state.startTime = overrideStart;
+          const overrideStart = state.downTime! + state.delayMs!;
+          const noteId = createNote(keyName, overrideStart);
+          state.noteId = noteId;
+          state.created = true;
+          state.startTime = overrideStart;
 
-        if (state.released) {
-          const forceMinLength = !!state.releasedBeforeStart;
-          scheduleNoteFinalization(keyName, state, { forceMinLength });
-          state.releasedBeforeStart = false;
-        }
-        // 실제 입력 시각 기준으로 노트 등장 시점을 맞춤. 입력 시각이 과거면
-        // 남은 대기를 0으로 clamp해 타이머가 음수가 되지 않도록 함
-      }, Math.max(0, downTime + delayMs - performance.now()));
+          if (state.released) {
+            const forceMinLength = !!state.releasedBeforeStart;
+            scheduleNoteFinalization(keyName, state, { forceMinLength });
+            state.releasedBeforeStart = false;
+          }
+          // 실제 입력 시각 기준으로 노트 등장 시점을 맞춤. 입력 시각이 과거면
+          // 남은 대기를 0으로 clamp해 타이머가 음수가 되지 않도록 함
+        },
+        Math.max(0, downTime + delayMs - performance.now()),
+      );
 
       state.startTimer = startTimer;
       stateList.push(state);

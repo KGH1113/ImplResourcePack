@@ -1847,12 +1847,12 @@ const Grid = ({
             contextType === 'mixed'
               ? mixedSelectionMenuItems
               : contextType === 'stat'
-              ? getStatMenuItems(contextIndex)
-              : contextType === 'graph'
-              ? getGraphMenuItems(contextIndex)
-              : contextType === 'knob'
-              ? getKnobMenuItems(contextIndex)
-              : getKeyMenuItems(contextIndex)
+                ? getStatMenuItems(contextIndex)
+                : contextType === 'graph'
+                  ? getGraphMenuItems(contextIndex)
+                  : contextType === 'knob'
+                    ? getKnobMenuItems(contextIndex)
+                    : getKeyMenuItems(contextIndex)
           }
           onSelect={async (id: string) => {
             if (contextType === 'mixed') {

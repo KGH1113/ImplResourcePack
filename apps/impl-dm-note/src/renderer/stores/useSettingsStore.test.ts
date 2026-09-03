@@ -31,7 +31,6 @@ const createSnapshot = (
   laboratoryEnabled: false,
   developerModeEnabled: false,
   trayEnabled: false,
-  autoUpdateEnabled: true,
   overlayResizeAnchor: 'top-left',
   keyCounterEnabled: false,
   gridSettings: getDefaultGridSettings(),

@@ -278,12 +278,6 @@ export type PresetSnapshot = {
   selectedKeyType: string;
   tabNoteOverrides: import('@src/types/settings/noteSettings').TabNoteOverrides;
 };
-export type AppAutoUpdateResult = {
-  previousVersion: string;
-  updatedTo: string;
-  downloadUrl: string;
-};
-
 export type BridgeMessage<T = unknown> = { type: string; data?: T };
 export type BridgeMessageListener<T = unknown> = (data: T) => void;
 export type BridgeAnyListener = (type: string, data: unknown) => void;
@@ -392,8 +386,7 @@ export type PluginDisplayElement = {
   estimatedSize?: { width: number; height: number };
   onClick?: string | (() => void | Promise<void>); // 이벤트 핸들러 ID 또는 함수 (메인 윈도우에서만)
   onPositionChange?:
-    | string
-    | ((position: { x: number; y: number }) => void | Promise<void>); // 위치 변경 핸들러 ID 또는 함수 (메인 윈도우에서만)
+    string | ((position: { x: number; y: number }) => void | Promise<void>); // 위치 변경 핸들러 ID 또는 함수 (메인 윈도우에서만)
   onDelete?: string | (() => void | Promise<void>); // 삭제 핸들러 ID 또는 함수 (메인 윈도우에서만)
   contextMenu?: PluginDisplayElementContextMenu;
   definitionId?: string;
@@ -417,19 +410,13 @@ export interface PluginDefinitionContextMenuItem {
     context: PluginDisplayElementActionContext,
   ) => void | Promise<void>;
   disabled?:
-    | boolean
-    | ((context: PluginDisplayElementActionContext) => boolean);
+    boolean | ((context: PluginDisplayElementActionContext) => boolean);
   visible?: boolean | ((context: PluginDisplayElementActionContext) => boolean);
   position?: 'top' | 'bottom';
 }
 
 export type PluginSettingType =
-  | 'boolean'
-  | 'color'
-  | 'number'
-  | 'string'
-  | 'select'
-  | 'divider';
+  'boolean' | 'color' | 'number' | 'string' | 'select' | 'divider';
 
 export type PluginSettingSchema =
   | {
@@ -740,7 +727,6 @@ export interface PanelOptions {
 export interface DMNoteAPI {
   app: {
     bootstrap(): Promise<BootstrapPayload>;
-    autoUpdate(tag: string): Promise<AppAutoUpdateResult>;
     openExternal(url: string): Promise<void>;
     restart(): Promise<void>;
     quit(): Promise<void>;
@@ -872,8 +858,7 @@ export interface DMNoteAPI {
     set(
       tabId: string,
       settings:
-        | import('@src/types/settings/noteSettings').TabNoteSettings
-        | null,
+        import('@src/types/settings/noteSettings').TabNoteSettings | null,
     ): Promise<TabNoteSetResult>;
     clear(tabId: string): Promise<TabNoteClearResult>;
     onChanged(listener: (payload: TabNoteResponse) => void): Unsubscribe;

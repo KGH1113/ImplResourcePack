@@ -208,7 +208,7 @@ pub(super) fn run_raw_input() -> Result<()> {
     };
 
     // Named pipe 연결 시도; 불가 시 stdout으로 폴백
-    let mut sink: Box<dyn Write + Send> = match pipe_client_connect("dmnote_keys_v1") {
+    let mut sink: Box<dyn Write + Send> = match pipe_client_connect("impl_dm_note_keys_v1") {
         Ok(file) => Box::new(file),
         Err(_) => Box::new(std::io::stdout()),
     };
@@ -254,7 +254,7 @@ pub(super) fn run_raw_input() -> Result<()> {
 
     unsafe {
         // WM_INPUT 수신용 최소 윈도우 클래스 등록
-        let class_name: Vec<u16> = "DmNoteRawInput"
+        let class_name: Vec<u16> = "ImplDmNoteRawInput"
             .encode_utf16()
             .chain(std::iter::once(0))
             .collect();

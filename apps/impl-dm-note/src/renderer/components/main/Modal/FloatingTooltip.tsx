@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/refs */
 import React, { useState, useRef, useId, useContext } from 'react';
 import {
   useFloating,

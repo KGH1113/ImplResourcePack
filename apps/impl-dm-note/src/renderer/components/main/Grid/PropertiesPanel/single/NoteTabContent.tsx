@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useRef, useState } from 'react';
 import type { NoteTabContentProps } from '../types';
 import type { NoteColor, KeyPosition } from '@src/types/key/keys';
@@ -734,16 +733,16 @@ const NoteTabContent: React.FC<NoteTabContentProps> = ({
             pickerFor === 'note'
               ? noteColorButtonRef
               : pickerFor === 'glow'
-              ? glowColorButtonRef
-              : borderColorButtonRef
+                ? glowColorButtonRef
+                : borderColorButtonRef
           }
           panelElement={panelElement}
           color={
             pickerFor === 'note'
               ? notePickerColor
               : pickerFor === 'glow'
-              ? glowPickerColor
-              : hexWithAlphaPercent(borderColor, localBorderOpacity)
+                ? glowPickerColor
+                : hexWithAlphaPercent(borderColor, localBorderOpacity)
           }
           onColorChange={(c: NoteColor) => {
             if (pickerFor === 'border') {
@@ -786,8 +785,8 @@ const NoteTabContent: React.FC<NoteTabContentProps> = ({
                   ? { top: localNoteOpacityTop, bottom: localNoteOpacityBottom }
                   : localNoteOpacity
                 : glowColorMode === COLOR_MODES.gradient
-                ? { top: localGlowOpacityTop, bottom: localGlowOpacityBottom }
-                : localGlowOpacity,
+                  ? { top: localGlowOpacityTop, bottom: localGlowOpacityBottom }
+                  : localGlowOpacity,
             onOpacityPercentChange: (
               value: number,
               target: 'solid' | 'top' | 'bottom',

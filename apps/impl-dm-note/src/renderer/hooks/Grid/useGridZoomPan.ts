@@ -295,11 +295,11 @@ export function useGridZoomPan({
   const handleWheelRef = useRef(handleWheel);
   const handleMiddleMouseDownRef = useRef(handleMiddleMouseDown);
   const handleKeyDownRef = useRef(handleKeyDown);
-  // eslint-disable-next-line react-hooks/refs -- 매 렌더 ref 동기화 (의도적)
+
   handleWheelRef.current = handleWheel;
-  // eslint-disable-next-line react-hooks/refs -- 매 렌더 ref 동기화 (의도적)
+
   handleMiddleMouseDownRef.current = handleMiddleMouseDown;
-  // eslint-disable-next-line react-hooks/refs -- 매 렌더 ref 동기화 (의도적)
+
   handleKeyDownRef.current = handleKeyDown;
 
   // container DOM 요소를 상태로 추적 (ref.current는 dependency로 사용 불가)

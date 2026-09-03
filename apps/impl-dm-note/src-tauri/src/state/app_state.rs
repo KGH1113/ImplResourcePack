@@ -296,7 +296,6 @@ impl AppState {
                 laboratory_enabled: state.laboratory_enabled,
                 developer_mode_enabled: state.developer_mode_enabled,
                 tray_enabled: state.tray_enabled,
-                auto_update_enabled: state.auto_update_enabled,
                 background_color: state.background_color.clone(),
                 use_custom_css: state.use_custom_css,
                 custom_css: state.custom_css.clone(),
@@ -784,8 +783,8 @@ impl AppState {
         let pipe_receiver: Option<std::sync::mpsc::Receiver<Option<std::fs::File>>> = {
             use std::sync::mpsc;
             let (tx, rx) = mpsc::channel();
-            std::thread::spawn(
-                move || match crate::ipc::pipe_server_create("dmnote_keys_v1") {
+            std::thread::spawn(move || {
+                match crate::ipc::pipe_server_create("impl_dm_note_keys_v1") {
                     Ok(f) => {
                         let _ = tx.send(Some(f));
                     }
@@ -793,8 +792,8 @@ impl AppState {
                         warn!("failed to create named pipe: {err}");
                         let _ = tx.send(None);
                     }
-                },
-            );
+                }
+            });
             Some(rx)
         };
         #[cfg(not(target_os = "windows"))]
@@ -1189,7 +1188,7 @@ impl AppState {
 
                             if emitted {
                                 keys_state_emit_count += 1;
-                                if keys_state_emit_count % 500 == 0 {
+                            if keys_state_emit_count.is_multiple_of(500) {
                                     log::debug!(
                                         "[AppState] emitted keys:state {} times (last key={}, state={})",
                                         keys_state_emit_count,
@@ -1487,12 +1486,12 @@ impl AppState {
                 #[cfg(target_os = "macos")]
                 apply_macos_overlay_fullscreen_behavior(&overlay_window, snapshot.always_on_top);
             }
-            WindowEvent::Moved(_) | WindowEvent::Resized(_) => {
+            WindowEvent::Moved(_) | WindowEvent::Resized(_)
+                if !initializing_flag.load(Ordering::SeqCst) =>
+            {
                 // 윈도우 초기화 중에는 OS가 보고하는 좌표로 저장된 bounds를 덮어쓰지 않음
-                if !initializing_flag.load(Ordering::SeqCst) {
-                    if let Err(err) = persist_overlay_bounds(&overlay_window, &store, viewer_kind) {
-                        log::warn!("failed to persist overlay bounds: {err}");
-                    }
+                if let Err(err) = persist_overlay_bounds(&overlay_window, &store, viewer_kind) {
+                    log::warn!("failed to persist overlay bounds: {err}");
                 }
             }
             _ => {}

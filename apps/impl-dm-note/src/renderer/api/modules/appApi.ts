@@ -1,12 +1,9 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import type { AppAutoUpdateResult } from '@src/types/plugin/api';
 import type { BootstrapPayload } from '@src/types/app';
 
 export const appApi = {
   bootstrap: () => invoke<BootstrapPayload>('app_bootstrap'),
-  autoUpdate: (tag: string) =>
-    invoke<AppAutoUpdateResult>('app_auto_update', { tag }),
   openExternal: (url: string) => invoke<void>('app_open_external', { url }),
   restart: () => invoke<void>('app_restart'),
   quit: () => invoke<void>('app_quit'),

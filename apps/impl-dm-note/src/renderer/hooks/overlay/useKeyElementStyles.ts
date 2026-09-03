@@ -98,12 +98,12 @@ export function computeKeyElementStyles({
 
   // 상태별 색상
   const stateBackgroundColor = active
-    ? activeBackgroundColor ?? backgroundColor
+    ? (activeBackgroundColor ?? backgroundColor)
     : backgroundColor;
   const stateBorderColor = active
-    ? activeBorderColor ?? borderColor
+    ? (activeBorderColor ?? borderColor)
     : borderColor;
-  const stateFontColor = active ? activeFontColor ?? fontColor : fontColor;
+  const stateFontColor = active ? (activeFontColor ?? fontColor) : fontColor;
 
   // 이미지 소스
   const inactiveImageSrc = resolveImageSource(inactiveImage);
@@ -123,8 +123,8 @@ export function computeKeyElementStyles({
   const defaultBgColor = hasCurrentImage
     ? 'transparent'
     : active
-    ? 'rgba(121, 121, 121, 0.9)'
-    : 'rgba(46, 46, 47, 0.9)';
+      ? 'rgba(121, 121, 121, 0.9)'
+      : 'rgba(46, 46, 47, 0.9)';
   const defaultBorderColor = active
     ? 'rgba(255, 255, 255, 0.9)'
     : 'rgba(113, 113, 113, 0.9)';

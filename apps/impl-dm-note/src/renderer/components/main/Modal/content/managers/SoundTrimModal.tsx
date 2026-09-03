@@ -1173,8 +1173,8 @@ const SoundTrimModal = ({
             {isSaving
               ? t('soundTrimModal.saving')
               : isEditMode
-              ? t('soundTrimModal.submitEdit')
-              : t('soundTrimModal.submit')}
+                ? t('soundTrimModal.submitEdit')
+                : t('soundTrimModal.submit')}
           </button>
           <button
             type="button"

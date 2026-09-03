@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useRef, useEffect } from 'react';
 import type { StyleTabContentProps } from '../types';
 import type { ImageFit, KeyPosition } from '@src/types/key/keys';
@@ -18,19 +17,12 @@ import Checkbox from '../../../common/Checkbox';
 
 // 피커 타겟 타입
 type PickerTarget =
-  | 'backgroundColor'
-  | 'borderColor'
-  | 'fontColor'
-  | 'image'
-  | 'font'
-  | null;
+  'backgroundColor' | 'borderColor' | 'fontColor' | 'image' | 'font' | null;
 
 type ColorState = 'idle' | 'active';
 type StyleColorTarget = 'backgroundColor' | 'borderColor' | 'fontColor';
 type ActiveStyleColorProperty =
-  | 'activeBackgroundColor'
-  | 'activeBorderColor'
-  | 'activeFontColor';
+  'activeBackgroundColor' | 'activeBorderColor' | 'activeFontColor';
 type StyleColorProperty =
   | StyleColorTarget
   | 'activeBackgroundColor'
@@ -438,7 +430,9 @@ const StyleTabContent: React.FC<StyleTabContentInternalProps> = ({
       {/* 위치 */}
       <PropertyRow label={t('propertiesPanel.position') || '위치'}>
         <NumberInput
-          value={isIndividualMode ? keyPosition.dx : localDx ?? keyPosition.dx}
+          value={
+            isIndividualMode ? keyPosition.dx : (localDx ?? keyPosition.dx)
+          }
           onChange={handlePositionXChange}
           prefix="X"
           min={-9999}
@@ -447,7 +441,9 @@ const StyleTabContent: React.FC<StyleTabContentInternalProps> = ({
           decimalScale={1}
         />
         <NumberInput
-          value={isIndividualMode ? keyPosition.dy : localDy ?? keyPosition.dy}
+          value={
+            isIndividualMode ? keyPosition.dy : (localDy ?? keyPosition.dy)
+          }
           onChange={handlePositionYChange}
           prefix="Y"
           min={-9999}
@@ -462,8 +458,8 @@ const StyleTabContent: React.FC<StyleTabContentInternalProps> = ({
         <NumberInput
           value={
             isIndividualMode
-              ? keyPosition.width ?? 60
-              : localWidth ?? keyPosition.width ?? 60
+              ? (keyPosition.width ?? 60)
+              : (localWidth ?? keyPosition.width ?? 60)
           }
           onChange={handleWidthChange}
           onBlur={onSizeBlur}
@@ -476,8 +472,8 @@ const StyleTabContent: React.FC<StyleTabContentInternalProps> = ({
         <NumberInput
           value={
             isIndividualMode
-              ? keyPosition.height ?? 60
-              : localHeight ?? keyPosition.height ?? 60
+              ? (keyPosition.height ?? 60)
+              : (localHeight ?? keyPosition.height ?? 60)
           }
           onChange={handleHeightChange}
           onBlur={onSizeBlur}
@@ -784,8 +780,8 @@ const StyleTabContent: React.FC<StyleTabContentInternalProps> = ({
             pickerFor === 'backgroundColor'
               ? bgColorBtnRef
               : pickerFor === 'borderColor'
-              ? borderColorBtnRef
-              : fontColorBtnRef
+                ? borderColorBtnRef
+                : fontColorBtnRef
           }
           panelElement={panelElement}
           color={colorValueFor(pickerFor as StyleColorTarget)}

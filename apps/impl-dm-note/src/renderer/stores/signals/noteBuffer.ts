@@ -33,10 +33,7 @@ const convertLinearToSRGB = (rgb: readonly number[]) =>
 
 const extractColorStops = (
   color:
-    | string
-    | { type: string; top?: string; bottom?: string }
-    | undefined
-    | null,
+    string | { type: string; top?: string; bottom?: string } | undefined | null,
   fallback = '#FFFFFF',
 ) => {
   if (!color) {

@@ -46,7 +46,6 @@ export interface SettingsState {
   laboratoryEnabled: boolean;
   developerModeEnabled: boolean;
   trayEnabled: boolean;
-  autoUpdateEnabled: boolean;
   backgroundColor: string;
   useCustomCSS: boolean;
   customCSS: CustomCss;

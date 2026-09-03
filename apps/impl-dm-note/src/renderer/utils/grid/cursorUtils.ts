@@ -22,10 +22,7 @@ export interface CursorSettings {
 
 /** 커서 타입 */
 export type CursorType =
-  | 'ns-resize'
-  | 'ew-resize'
-  | 'nwse-resize'
-  | 'nesw-resize';
+  'ns-resize' | 'ew-resize' | 'nwse-resize' | 'nesw-resize';
 
 /** 캐시된 커서 설정 */
 let cachedSettings: CursorSettings | null = null;

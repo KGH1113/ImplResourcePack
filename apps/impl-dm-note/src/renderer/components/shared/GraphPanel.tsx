@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 
 const BAR_ANIMATION_DURATION_MS = 150;

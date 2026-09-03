@@ -113,7 +113,6 @@ function buildSettingsSnapshot(
     laboratoryEnabled: bootstrap.settings.laboratoryEnabled,
     developerModeEnabled: bootstrap.settings.developerModeEnabled ?? false,
     trayEnabled: bootstrap.settings.trayEnabled ?? false,
-    autoUpdateEnabled: bootstrap.settings.autoUpdateEnabled ?? true,
     overlayResizeAnchor: bootstrap.settings.overlayResizeAnchor,
     keyCounterEnabled: bootstrap.settings.keyCounterEnabled,
     gridSettings: bootstrap.settings.gridSettings ?? getDefaultGridSettings(),

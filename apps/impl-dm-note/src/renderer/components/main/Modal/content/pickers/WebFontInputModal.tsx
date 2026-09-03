@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/refs */
 import { useState, useRef, useLayoutEffect } from 'react';
 import { EditorSelection, EditorState } from '@codemirror/state';
 import {

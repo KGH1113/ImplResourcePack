@@ -6,11 +6,7 @@ import type { GraphItemPosition } from '@src/types/key/graphItems';
 import type { KnobItemPosition } from '@src/types/key/knobs';
 
 export type SelectableElementType =
-  | 'key'
-  | 'stat'
-  | 'graph'
-  | 'knob'
-  | 'plugin';
+  'key' | 'stat' | 'graph' | 'knob' | 'plugin';
 
 export interface SelectedElement {
   type: SelectableElementType;

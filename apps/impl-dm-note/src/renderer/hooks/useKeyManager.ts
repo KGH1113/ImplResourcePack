@@ -356,11 +356,11 @@ export function useKeyManager() {
               activeTransparent:
                 updates.activeTransparent !== undefined
                   ? updates.activeTransparent
-                  : pos.activeTransparent ?? false,
+                  : (pos.activeTransparent ?? false),
               idleTransparent:
                 updates.idleTransparent !== undefined
                   ? updates.idleTransparent
-                  : pos.idleTransparent ?? false,
+                  : (pos.idleTransparent ?? false),
               width:
                 typeof updates.width === 'number' &&
                 !Number.isNaN(updates.width)
@@ -374,7 +374,7 @@ export function useKeyManager() {
               className:
                 updates.className !== undefined
                   ? updates.className
-                  : pos.className ?? '',
+                  : (pos.className ?? ''),
               backgroundColor:
                 updates.backgroundColor !== undefined
                   ? updates.backgroundColor
@@ -515,11 +515,11 @@ export function useKeyManager() {
           activeTransparent:
             update.activeTransparent !== undefined
               ? update.activeTransparent
-              : pos.activeTransparent ?? false,
+              : (pos.activeTransparent ?? false),
           idleTransparent:
             update.idleTransparent !== undefined
               ? update.idleTransparent
-              : pos.idleTransparent ?? false,
+              : (pos.idleTransparent ?? false),
           width:
             typeof update.width === 'number' && !Number.isNaN(update.width)
               ? update.width
@@ -531,7 +531,7 @@ export function useKeyManager() {
           className:
             update.className !== undefined
               ? update.className
-              : pos.className ?? '',
+              : (pos.className ?? ''),
           backgroundColor:
             update.backgroundColor !== undefined
               ? update.backgroundColor
@@ -809,8 +809,7 @@ export function useKeyManager() {
 
         applyRestoredPluginElements(
           targetState.pluginElements as
-            | PluginDisplayElementInternal[]
-            | undefined,
+            PluginDisplayElementInternal[] | undefined,
           currentPluginElements,
           targetState.pluginElements
             ? new Set(targetState.pluginElements.map((el) => el.fullId))

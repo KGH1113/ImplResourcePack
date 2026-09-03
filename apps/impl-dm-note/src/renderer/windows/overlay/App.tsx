@@ -44,8 +44,8 @@ export default function App() {
     windowLabel === 'hand-overlay'
       ? 'hand'
       : windowLabel === 'foot-overlay'
-      ? 'foot'
-      : undefined;
+        ? 'foot'
+        : undefined;
   useCustomCssInjection();
   useCustomJsInjection();
   useAppBootstrap(viewerKind);

@@ -2,12 +2,11 @@
   "default": null,
   "permission": [
     {
-      "identifier": "dmnote-allow-all",
-      "description": "Full DM Note command access for renderer",
+      "identifier": "impl-dm-note-allow-all",
+      "description": "Full ImplDmNote command access for renderer",
       "commands": {
         "allow": [
           "adofai_ipc_http_request",
-          "app_auto_update",
           "app_bootstrap",
           "app_open_external",
           "app_quit",

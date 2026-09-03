@@ -70,8 +70,8 @@ const InsideCounterLayout = ({
       ? [counterElement, nameElement]
       : [nameElement, counterElement]
     : counterSettings.align === 'top'
-    ? [counterElement, nameElement]
-    : [nameElement, counterElement];
+      ? [counterElement, nameElement]
+      : [nameElement, counterElement];
 
   const alignMode = counterSettings.alignMode || 'center';
   const isBetween = alignMode === 'between';

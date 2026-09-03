@@ -1,4 +1,3 @@
-'use no memo';
 import React, { useRef, useEffect } from 'react';
 import { getKeySignal } from '@stores/signals/keySignals';
 import { getKeyCounterSignal } from '@stores/signals/keyCounterSignals';
@@ -577,8 +576,8 @@ const DraggableKey = React.memo(
           ? [counterElement, nameElement]
           : [nameElement, counterElement]
         : counterSettings.align === 'top'
-        ? [counterElement, nameElement]
-        : [nameElement, counterElement];
+          ? [counterElement, nameElement]
+          : [nameElement, counterElement];
 
       const alignMode = counterSettings.alignMode || 'center';
       const isBetween = alignMode === 'between';

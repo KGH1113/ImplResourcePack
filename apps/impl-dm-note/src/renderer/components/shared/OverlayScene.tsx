@@ -8,36 +8,10 @@ import OverlayGraphItemBase from '@components/overlay/counters/OverlayGraphItem'
 import OverlayKnobItemBase from '@components/overlay/counters/OverlayKnobItem';
 import { PluginElementsRenderer } from '@components/shared/PluginElementsRenderer';
 import { getKeyInfoByGlobalKey } from '@utils/core/KeyMaps';
-import {
-  createDefaultCounterSettings,
-  type KeyPosition,
-} from '@src/types/key/keys';
+import type { KeyPosition } from '@src/types/key/keys';
+import { FALLBACK_POSITION } from '@constants/overlayDefaults';
 import type { NoteSettings } from '@src/types/settings/noteSettings';
 import type { NoteBuffer } from '@stores/signals/noteBuffer';
-
-const FALLBACK_POSITION: KeyPosition = {
-  dx: 0,
-  dy: 0,
-  width: 60,
-  height: 60,
-  hidden: false,
-  activeImage: '',
-  inactiveImage: '',
-  activeTransparent: false,
-  idleTransparent: false,
-  count: 0,
-  noteColor: '#FFFFFF',
-  noteOpacity: 80,
-  noteAlignment: 'center',
-  noteEffectEnabled: true,
-  noteGlowEnabled: false,
-  noteGlowSize: 20,
-  noteGlowOpacity: 70,
-  noteGlowColor: '#FFFFFF',
-  noteAutoYCorrection: true,
-  className: '',
-  counter: createDefaultCounterSettings(),
-};
 
 // 타입 별칭 (공용)
 interface OverlayKeyProps {
@@ -203,10 +177,10 @@ const OverlayScene = ({
           statType === 'kpsAvg'
             ? 'AVG'
             : statType === 'kpsMax'
-            ? 'MAX'
-            : statType === 'total'
-            ? 'Total'
-            : 'KPS';
+              ? 'MAX'
+              : statType === 'total'
+                ? 'Total'
+                : 'KPS';
         const label =
           (
             ((pos as { displayText?: string }).displayText || '') as string
@@ -275,5 +249,4 @@ const OverlayScene = ({
 };
 
 export default OverlayScene;
-export { FALLBACK_POSITION };
 export type { OverlaySceneProps };

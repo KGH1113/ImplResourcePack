@@ -62,10 +62,10 @@ export function buildLayerItems({
       pos.statType === 'kpsAvg'
         ? 'AVG'
         : pos.statType === 'kpsMax'
-        ? 'MAX'
-        : pos.statType === 'total'
-        ? 'Total'
-        : 'KPS';
+          ? 'MAX'
+          : pos.statType === 'total'
+            ? 'Total'
+            : 'KPS';
     items.push({
       type: 'stat',
       id: `stat-${index}`,
@@ -84,10 +84,10 @@ export function buildLayerItems({
       pos.statType === 'kpsAvg'
         ? 'AVG Graph'
         : pos.statType === 'kpsMax'
-        ? 'MAX Graph'
-        : pos.statType === 'total'
-        ? 'Total Graph'
-        : 'KPS Graph';
+          ? 'MAX Graph'
+          : pos.statType === 'total'
+            ? 'Total Graph'
+            : 'KPS Graph';
     items.push({
       type: 'graph',
       id: `graph-${index}`,

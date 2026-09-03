@@ -324,8 +324,8 @@ SettingToolProps) => {
               isObsModeActive
                 ? t('tooltip.overlayObsDisabled')
                 : isOverlayVisible
-                ? t('tooltip.overlayClose')
-                : t('tooltip.overlayOpen')
+                  ? t('tooltip.overlayClose')
+                  : t('tooltip.overlayOpen')
             }
           >
             <Button

@@ -55,8 +55,7 @@ declare global {
     __dmn_plugin_window_proxy?: Window;
     __dmn_custom_js_cleanup?: () => void;
     [key: `__dmn_handler_${string}`]:
-      | ((...args: unknown[]) => void | Promise<void>)
-      | undefined;
+      ((...args: unknown[]) => void | Promise<void>) | undefined;
   }
 
   // dmn 전역 변수 (window. 없이 바로 접근 가능)

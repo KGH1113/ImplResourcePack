@@ -87,104 +87,100 @@ const NoteTabContent = forwardRef<NoteTabContentRef, NoteTabContentProps>(
         : state.glowColor.replace(/^#/, '');
 
     // ref를 통해 버튼 refs와 핸들러 노출
-    useImperativeHandle(
-      ref,
-      () => {
-        const handleColorChangeInner = (newColor: ColorChangeValue) => {
-          if (typeof newColor === 'object' && newColor.type === 'gradient') {
-            setState((prev) => ({
-              ...prev,
-              colorMode: COLOR_MODES.gradient,
-              noteColor: newColor.top,
-              gradientBottom: newColor.bottom,
-            }));
-          } else {
-            const solidColor = newColor as string;
-            setState((prev) => ({
-              ...prev,
-              colorMode: COLOR_MODES.solid,
-              noteColor: solidColor,
-              gradientBottom: solidColor,
-            }));
-          }
-        };
+    useImperativeHandle(ref, () => {
+      const handleColorChangeInner = (newColor: ColorChangeValue) => {
+        if (typeof newColor === 'object' && newColor.type === 'gradient') {
+          setState((prev) => ({
+            ...prev,
+            colorMode: COLOR_MODES.gradient,
+            noteColor: newColor.top,
+            gradientBottom: newColor.bottom,
+          }));
+        } else {
+          const solidColor = newColor as string;
+          setState((prev) => ({
+            ...prev,
+            colorMode: COLOR_MODES.solid,
+            noteColor: solidColor,
+            gradientBottom: solidColor,
+          }));
+        }
+      };
 
-        const handleColorChangeCompleteInner = (newColor: ColorChangeValue) => {
-          if (typeof newColor === 'object' && newColor.type === 'gradient') {
-            setState((prev) => ({
-              ...prev,
-              colorMode: COLOR_MODES.gradient,
-              noteColor: newColor.top,
-              gradientBottom: newColor.bottom,
-            }));
-            onPreview({ noteColor: toGradient(newColor.top, newColor.bottom) });
-          } else {
-            const solidColor = newColor as string;
-            setState((prev) => ({
-              ...prev,
-              colorMode: COLOR_MODES.solid,
-              noteColor: solidColor,
-              gradientBottom: solidColor,
-            }));
-            onPreview({ noteColor: solidColor });
-          }
-        };
+      const handleColorChangeCompleteInner = (newColor: ColorChangeValue) => {
+        if (typeof newColor === 'object' && newColor.type === 'gradient') {
+          setState((prev) => ({
+            ...prev,
+            colorMode: COLOR_MODES.gradient,
+            noteColor: newColor.top,
+            gradientBottom: newColor.bottom,
+          }));
+          onPreview({ noteColor: toGradient(newColor.top, newColor.bottom) });
+        } else {
+          const solidColor = newColor as string;
+          setState((prev) => ({
+            ...prev,
+            colorMode: COLOR_MODES.solid,
+            noteColor: solidColor,
+            gradientBottom: solidColor,
+          }));
+          onPreview({ noteColor: solidColor });
+        }
+      };
 
-        const handleGlowColorChangeInner = (newColor: ColorChangeValue) => {
-          if (typeof newColor === 'object' && newColor.type === 'gradient') {
-            setState((prev) => ({
-              ...prev,
-              glowColorMode: COLOR_MODES.gradient,
-              glowColor: newColor.top,
-              glowGradientBottom: newColor.bottom,
-            }));
-          } else {
-            const solidColor = newColor as string;
-            setState((prev) => ({
-              ...prev,
-              glowColorMode: COLOR_MODES.solid,
-              glowColor: solidColor,
-              glowGradientBottom: solidColor,
-            }));
-          }
-        };
+      const handleGlowColorChangeInner = (newColor: ColorChangeValue) => {
+        if (typeof newColor === 'object' && newColor.type === 'gradient') {
+          setState((prev) => ({
+            ...prev,
+            glowColorMode: COLOR_MODES.gradient,
+            glowColor: newColor.top,
+            glowGradientBottom: newColor.bottom,
+          }));
+        } else {
+          const solidColor = newColor as string;
+          setState((prev) => ({
+            ...prev,
+            glowColorMode: COLOR_MODES.solid,
+            glowColor: solidColor,
+            glowGradientBottom: solidColor,
+          }));
+        }
+      };
 
-        const handleGlowColorChangeCompleteInner = (
-          newColor: ColorChangeValue,
-        ) => {
-          if (typeof newColor === 'object' && newColor.type === 'gradient') {
-            setState((prev) => ({
-              ...prev,
-              glowColorMode: COLOR_MODES.gradient,
-              glowColor: newColor.top,
-              glowGradientBottom: newColor.bottom,
-            }));
-            onPreview({
-              noteGlowColor: toGradient(newColor.top, newColor.bottom),
-            });
-          } else {
-            const solidColor = newColor as string;
-            setState((prev) => ({
-              ...prev,
-              glowColorMode: COLOR_MODES.solid,
-              glowColor: solidColor,
-              glowGradientBottom: solidColor,
-            }));
-            onPreview({ noteGlowColor: solidColor });
-          }
-        };
+      const handleGlowColorChangeCompleteInner = (
+        newColor: ColorChangeValue,
+      ) => {
+        if (typeof newColor === 'object' && newColor.type === 'gradient') {
+          setState((prev) => ({
+            ...prev,
+            glowColorMode: COLOR_MODES.gradient,
+            glowColor: newColor.top,
+            glowGradientBottom: newColor.bottom,
+          }));
+          onPreview({
+            noteGlowColor: toGradient(newColor.top, newColor.bottom),
+          });
+        } else {
+          const solidColor = newColor as string;
+          setState((prev) => ({
+            ...prev,
+            glowColorMode: COLOR_MODES.solid,
+            glowColor: solidColor,
+            glowGradientBottom: solidColor,
+          }));
+          onPreview({ noteGlowColor: solidColor });
+        }
+      };
 
-        return {
-          colorButtonRef,
-          glowColorButtonRef,
-          handleColorChange: handleColorChangeInner,
-          handleColorChangeComplete: handleColorChangeCompleteInner,
-          handleGlowColorChange: handleGlowColorChangeInner,
-          handleGlowColorChangeComplete: handleGlowColorChangeCompleteInner,
-        };
-      },
-      [setState, onPreview],
-    );
+      return {
+        colorButtonRef,
+        glowColorButtonRef,
+        handleColorChange: handleColorChangeInner,
+        handleColorChangeComplete: handleColorChangeCompleteInner,
+        handleGlowColorChange: handleGlowColorChangeInner,
+        handleGlowColorChangeComplete: handleGlowColorChangeCompleteInner,
+      };
+    }, [setState, onPreview]);
 
     // 불투명도 핸들러
     const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {

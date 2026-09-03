@@ -1,4 +1,3 @@
-'use no memo';
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime';
 import { getKeyCounterSignal } from '@stores/signals/keyCounterSignals';

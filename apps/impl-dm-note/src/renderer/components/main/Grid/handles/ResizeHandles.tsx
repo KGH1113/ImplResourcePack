@@ -307,17 +307,18 @@ const ResizeHandles = ({
           handle!.dx !== 0 && handle!.dy === 0
             ? 'width'
             : handle!.dy !== 0 && handle!.dx === 0
-            ? 'height'
-            : isCorner
-            ? (() => {
-                const relW =
-                  Math.abs(newWidth - startBounds!.width) / startBounds!.width;
-                const relH =
-                  Math.abs(newHeight - startBounds!.height) /
-                  startBounds!.height;
-                return relW >= relH ? 'width' : 'height';
-              })()
-            : 'width';
+              ? 'height'
+              : isCorner
+                ? (() => {
+                    const relW =
+                      Math.abs(newWidth - startBounds!.width) /
+                      startBounds!.width;
+                    const relH =
+                      Math.abs(newHeight - startBounds!.height) /
+                      startBounds!.height;
+                    return relW >= relH ? 'width' : 'height';
+                  })()
+                : 'width';
 
         if (primary === 'width') {
           newWidth = Math.max(MIN_SIZE, snap(newWidth));

@@ -275,8 +275,8 @@ export function useLayerDnD({
       row.displayType === 'group-header'
         ? rowIndex
         : isBottomHalf
-        ? rowIndex + 1
-        : rowIndex;
+          ? rowIndex + 1
+          : rowIndex;
     const target = resolveItemDropTarget(displaySlotIndex, draggingIds);
 
     return {

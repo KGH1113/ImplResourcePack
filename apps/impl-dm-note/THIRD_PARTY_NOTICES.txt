@@ -1,19 +1,25 @@
 THIRD-PARTY NOTICES
 ===================
 
-This file contains notices for third-party software included in DM Note.
+This file contains notices for third-party software and assets included in ImplDmNote.
+
+
+Upstream DM Note artwork
+-----------------------
+
+ImplDmNote retains the upstream DM Note application icon and in-app logo required at runtime. They are part of the GPL-3.0-only upstream work. Copyright and design credits are recorded in UPSTREAM.md. Promotional and documentation media from upstream are not included.
 
 
 Steinberg ASIO SDK
 ------------------
 
-Windows builds of DM Note include (statically link) a subset of the
+Windows builds of ImplDmNote include (statically link) a subset of the
 Steinberg ASIO SDK (version 2.3.4), vendored at src-tauri/vendor/asio-sdk.
 
 The Steinberg ASIO SDK is dual-licensed: under the proprietary Steinberg
 ASIO License, or alternatively under the GNU General Public License (GPL)
 Version 3. DM Note uses and redistributes the SDK under the GPLv3 option,
-consistent with DM Note's own license (GPL-3.0-only). See
+consistent with ImplDmNote's license (GPL-3.0-only). See
 src-tauri/vendor/asio-sdk/LICENSE.txt for the SDK's license text.
 
 ASIO is a trademark of Steinberg Media Technologies GmbH, registered in

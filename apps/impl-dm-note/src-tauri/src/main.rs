@@ -34,7 +34,6 @@ fn main() {
     #[cfg(target_os = "windows")]
     {
         // WebView2 투명 오버레이 이슈 방지 — 번들된 Fixed 런타임 우선 적용
-        apply_embedded_webview2_fixed_runtime_override();
         apply_webview2_fixed_runtime_override();
 
         // GPU/하드웨어 가속 강제 활성화 및 렌더링 최적화 플래그
@@ -148,7 +147,6 @@ fn main() {
             // 앱 생명주기
             commands::app::bootstrap::app_bootstrap,
             commands::app::adofai_ipc::adofai_ipc_http_request,
-            commands::app::update::app_auto_update,
             commands::app::system::window_minimize,
             commands::app::system::window_close,
             commands::app::system::window_show_main,
@@ -517,11 +515,11 @@ fn register_dev_capability(app: &tauri::App) -> Result<(), Box<dyn std::error::E
     ];
 
     let builder = DEV_URLS.iter().fold(
-        CapabilityBuilder::new("dmnote-dev")
+        CapabilityBuilder::new("impl-dm-note-dev")
             .local(true)
             .windows(["main", "hand-overlay", "foot-overlay"])
             .webviews(["main", "hand-overlay", "foot-overlay"])
-            .permission("dmnote-allow-all"),
+            .permission("impl-dm-note-allow-all"),
         |acc, url| acc.remote((*url).to_string()),
     );
 
@@ -616,7 +614,7 @@ fn apply_webview2_fixed_runtime_override() {
     use std::env;
     const KEY: &str = "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER";
 
-    if env::var_os("DMNOTE_WEBVIEW2_USE_SYSTEM").is_some() {
+    if env::var_os("IMPL_DM_NOTE_WEBVIEW2_USE_SYSTEM").is_some() {
         return;
     }
 
@@ -626,7 +624,7 @@ fn apply_webview2_fixed_runtime_override() {
 
     let mut candidates: Vec<PathBuf> = Vec::new();
 
-    if let Some(dir) = env::var_os("DMNOTE_WEBVIEW2_FIXED_RUNTIME_DIR") {
+    if let Some(dir) = env::var_os("IMPL_DM_NOTE_WEBVIEW2_FIXED_RUNTIME_DIR") {
         candidates.push(PathBuf::from(dir));
     }
 
@@ -669,113 +667,6 @@ fn apply_webview2_fixed_runtime_override() {
 #[cfg(target_os = "windows")]
 fn is_valid_webview2_fixed_runtime_dir(dir: &std::path::Path) -> bool {
     dir.is_dir() && dir.join("msedgewebview2.exe").is_file()
-}
-
-#[cfg(all(target_os = "windows", dmnote_embedded_webview2))]
-fn apply_embedded_webview2_fixed_runtime_override() {
-    use std::env;
-    use std::fs;
-
-    const KEY: &str = "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER";
-    const VERSION_FILE: &str = "dmnote-webview2-fixed-runtime-version.txt";
-
-    if env::var_os("DMNOTE_WEBVIEW2_USE_SYSTEM").is_some() {
-        return;
-    }
-    if env::var_os(KEY).is_some() {
-        return;
-    }
-
-    let embedded_version = option_env!("DMNOTE_WEBVIEW2_EMBEDDED_VERSION").unwrap_or("unknown");
-    let embedded_arch = option_env!("DMNOTE_WEBVIEW2_EMBEDDED_ARCH").unwrap_or("x64");
-
-    let extract_dir = match dirs_next::data_local_dir() {
-        Some(dir) => dir
-            .join("io.github.kgh1113.impldmnote")
-            .join("webview2-fixed-runtime")
-            .join(format!("{embedded_version}-{embedded_arch}")),
-        None => return,
-    };
-
-    let expected_version_file = extract_dir.join(VERSION_FILE);
-    let needs_extract = match (
-        read_first_line_trimmed(&expected_version_file),
-        is_valid_webview2_fixed_runtime_dir(&extract_dir),
-    ) {
-        (Some(v), true) if v == embedded_version => false,
-        _ => true,
-    };
-
-    if needs_extract {
-        // 이전 추출 시도 정리
-        let _ = fs::remove_dir_all(&extract_dir);
-        if let Err(err) = fs::create_dir_all(&extract_dir) {
-            log::warn!(
-                "failed to create embedded webview2 dir {}: {err}",
-                extract_dir.display()
-            );
-            return;
-        }
-
-        static ZIP_BYTES: &[u8] = include_bytes!(env!("DMNOTE_WEBVIEW2_EMBEDDED_ZIP"));
-        if let Err(err) = extract_zip_bytes_to_dir(ZIP_BYTES, &extract_dir) {
-            log::warn!(
-                "failed to extract embedded webview2 runtime to {}: {err}",
-                extract_dir.display()
-            );
-            return;
-        }
-    }
-
-    if is_valid_webview2_fixed_runtime_dir(&extract_dir) {
-        env::set_var(KEY, &extract_dir);
-        log::info!(
-            "using embedded fixed WebView2 runtime: {}",
-            extract_dir.display()
-        );
-    }
-}
-
-#[cfg(all(target_os = "windows", not(dmnote_embedded_webview2)))]
-fn apply_embedded_webview2_fixed_runtime_override() {}
-
-#[cfg(all(target_os = "windows", dmnote_embedded_webview2))]
-fn read_first_line_trimmed(path: &std::path::Path) -> Option<String> {
-    let content = std::fs::read_to_string(path).ok()?;
-    content.lines().next().map(|l| l.trim().to_string())
-}
-
-#[cfg(all(target_os = "windows", dmnote_embedded_webview2))]
-fn extract_zip_bytes_to_dir(zip_bytes: &[u8], dest_dir: &std::path::Path) -> Result<(), String> {
-    use std::io::{self, Cursor, Write};
-
-    let reader = Cursor::new(zip_bytes);
-    let mut archive = zip::ZipArchive::new(reader).map_err(|e| e.to_string())?;
-
-    for i in 0..archive.len() {
-        let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-        let enclosed = match file.enclosed_name() {
-            Some(name) => name.to_owned(),
-            None => continue,
-        };
-        let out_path = dest_dir.join(enclosed);
-
-        if file.is_dir() {
-            std::fs::create_dir_all(&out_path).map_err(|e| e.to_string())?;
-            continue;
-        }
-
-        if let Some(parent) = out_path.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-        }
-
-        let mut out_file = std::fs::File::create(&out_path).map_err(|e| e.to_string())?;
-        io::copy(&mut file, &mut out_file).map_err(|e| e.to_string())?;
-
-        let _ = out_file.flush();
-    }
-
-    Ok(())
 }
 
 /// macOS 접근성(Accessibility) 권한을 확인하고,
@@ -823,8 +714,8 @@ fn request_accessibility_permission() {
             keys.as_ptr(),
             values.as_ptr(),
             1,
-            &kCFTypeDictionaryKeyCallBacks as *const _ as *const c_void,
-            &kCFTypeDictionaryValueCallBacks as *const _ as *const c_void,
+            &kCFTypeDictionaryKeyCallBacks as *const _,
+            &kCFTypeDictionaryValueCallBacks as *const _,
         );
 
         let trusted = AXIsProcessTrustedWithOptions(options);

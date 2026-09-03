@@ -6,11 +6,7 @@ import type {
 } from '@src/renderer/ipc/keyLimiterIpcCoordinator';
 
 export type KeyLimiterDeliveryState =
-  | 'idle'
-  | 'sending'
-  | 'applied'
-  | 'released'
-  | 'error';
+  'idle' | 'sending' | 'applied' | 'released' | 'error';
 
 export interface KeyLimiterAcknowledgement {
   sessionId: string;
@@ -75,8 +71,8 @@ export const useKeyLimiterStatusStore = create<KeyLimiterStatusState>(
           connectionState === 'retrying'
             ? errorMessage(error)
             : get().deliveryState === 'error'
-            ? get().error
-            : null,
+              ? get().error
+              : null,
       });
     },
     markSyncStarted: (request) => {

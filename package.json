@@ -7,7 +7,10 @@
   "scripts": {
     "desktop:dev": "npm run tauri:dev -w @impl-resourcepack/impl-dm-note",
     "desktop:build": "npm run tauri:build -w @impl-resourcepack/impl-dm-note",
+    "desktop:build:mac": "npm run tauri:build:mac -w @impl-resourcepack/impl-dm-note",
+    "desktop:build:windows": "npm run tauri:build:windows -w @impl-resourcepack/impl-dm-note",
     "desktop:test": "npm run test -w @impl-resourcepack/impl-dm-note",
-    "desktop:check": "npm run check -w @impl-resourcepack/impl-dm-note"
+    "desktop:check": "npm run check -w @impl-resourcepack/impl-dm-note",
+    "desktop:audit": "node scripts/audit-public-release.cjs"
   }
 }

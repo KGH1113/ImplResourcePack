@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/refs */
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from '@contexts/useTranslation';
 import { getKeyInfoByGlobalKey } from '@utils/core/KeyMaps';

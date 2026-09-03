@@ -132,10 +132,10 @@ const Dropdown: React.FC<DropdownProps> = ({
             fullWidth
               ? 'left-0 right-0'
               : align === 'right'
-              ? 'right-0'
-              : align === 'center'
-              ? 'left-1/2 -translate-x-1/2'
-              : 'left-0'
+                ? 'right-0'
+                : align === 'center'
+                  ? 'left-1/2 -translate-x-1/2'
+                  : 'left-0'
           } ${widthClass} ${openUpward ? 'bottom-[25px]' : 'top-[25px]'}`}
         >
           {options.length === 0 ? (

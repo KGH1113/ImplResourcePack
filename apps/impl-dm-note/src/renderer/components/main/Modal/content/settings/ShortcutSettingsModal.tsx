@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/refs */
 import React from 'react';
 import Modal from '@components/main/Modal/Modal';
 import { useLenis } from '@hooks/useLenis';
@@ -47,10 +46,10 @@ function formatShortcut(binding: ShortcutBinding, macOS: boolean): string {
     key.startsWith('Key') && key.length === 4
       ? key.slice(3)
       : key.startsWith('Digit') && key.length === 6
-      ? key.slice(5)
-      : key === 'Space'
-      ? 'Space'
-      : key;
+        ? key.slice(5)
+        : key === 'Space'
+          ? 'Space'
+          : key;
 
   parts.push(displayKey);
   return parts.join(' + ');

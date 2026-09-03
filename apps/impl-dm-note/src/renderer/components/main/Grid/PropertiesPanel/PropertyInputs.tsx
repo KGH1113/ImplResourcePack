@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useRef } from 'react';
 import type {
   PropertyRowProps,
@@ -324,8 +323,8 @@ export const OptionalNumberInput: React.FC<OptionalNumberInputProps> = ({
         ? /[^0-9.-]/g
         : /[^0-9.]/g
       : allowNegative
-      ? /[^0-9-]/g
-      : /[^0-9]/g;
+        ? /[^0-9-]/g
+        : /[^0-9]/g;
     let sanitized = raw.replace(pattern, '');
 
     if (allowNegative) {
@@ -632,8 +631,8 @@ export const ColorInput: React.FC<ColorInputProps> = ({
     showStateTabs && isStateControlled
       ? externalStateMode
       : showStateTabs
-      ? internalStateMode
-      : 'idle';
+        ? internalStateMode
+        : 'idle';
 
   const buttonRef = useRef<HTMLButtonElement>(null);
 

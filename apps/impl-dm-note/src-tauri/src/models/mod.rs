@@ -583,7 +583,7 @@ pub fn normalize_user_counter_animation_presets(
         })
         .collect();
 
-    normalized.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    normalized.sort_by_key(|item| item.name.to_lowercase());
     normalized
 }
 
@@ -1163,10 +1163,6 @@ fn default_true() -> bool {
     true
 }
 
-fn default_auto_update_enabled() -> bool {
-    true
-}
-
 fn default_obs_port() -> u16 {
     obs::DEFAULT_OBS_PORT
 }
@@ -1311,8 +1307,6 @@ pub struct AppStoreData {
     pub developer_mode_enabled: bool,
     #[serde(default)]
     pub tray_enabled: bool,
-    #[serde(default = "default_auto_update_enabled")]
-    pub auto_update_enabled: bool,
     #[serde(default)]
     pub main_window_hidden: bool,
     #[serde(default)]
@@ -1419,7 +1413,6 @@ impl Default for AppStoreData {
             laboratory_enabled: false,
             developer_mode_enabled: false,
             tray_enabled: false,
-            auto_update_enabled: default_auto_update_enabled(),
             main_window_hidden: false,
             keys: KeyMappings::new(),
             key_positions: KeyPositions::new(),
@@ -1699,8 +1692,6 @@ pub struct SettingsState {
     pub developer_mode_enabled: bool,
     #[serde(default)]
     pub tray_enabled: bool,
-    #[serde(default = "default_auto_update_enabled")]
-    pub auto_update_enabled: bool,
     pub background_color: String,
     #[serde(rename = "useCustomCSS")]
     pub use_custom_css: bool,
@@ -1742,7 +1733,6 @@ impl Default for SettingsState {
             laboratory_enabled: false,
             developer_mode_enabled: false,
             tray_enabled: false,
-            auto_update_enabled: default_auto_update_enabled(),
             background_color: "transparent".to_string(),
             use_custom_css: false,
             custom_css: CustomCss::default(),
@@ -1790,7 +1780,6 @@ pub struct SettingsPatchInput {
     pub laboratory_enabled: Option<bool>,
     pub developer_mode_enabled: Option<bool>,
     pub tray_enabled: Option<bool>,
-    pub auto_update_enabled: Option<bool>,
     pub background_color: Option<String>,
     #[serde(rename = "useCustomCSS")]
     pub use_custom_css: Option<bool>,
@@ -1851,7 +1840,6 @@ impl SettingsDiff {
             p.laboratory_enabled.is_some(),
             p.developer_mode_enabled.is_some(),
             p.tray_enabled.is_some(),
-            p.auto_update_enabled.is_some(),
             p.background_color.is_some(),
             p.use_custom_css.is_some(),
             p.custom_css.is_some(),
@@ -1893,8 +1881,6 @@ pub struct SettingsPatch {
     pub developer_mode_enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tray_enabled: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub auto_update_enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub background_color: Option<String>,
     #[serde(rename = "useCustomCSS")]

@@ -1,4 +1,3 @@
-'use no memo';
 import React, { useEffect, useState } from 'react';
 import { useSignals } from '@preact/signals-react/runtime';
 import { getAxisSignal } from '@stores/signals/axisSignals';

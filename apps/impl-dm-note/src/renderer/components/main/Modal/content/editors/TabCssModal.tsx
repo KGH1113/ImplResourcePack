@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState, useRef } from 'react';
 import Modal from '../../Modal';
 import Checkbox from '@components/main/common/Checkbox';

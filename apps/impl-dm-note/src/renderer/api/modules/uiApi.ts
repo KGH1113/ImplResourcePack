@@ -225,10 +225,10 @@ export const uiApi = {
               e.type === 'click'
                 ? 'data-plugin-handler'
                 : e.type === 'input'
-                ? 'data-plugin-handler-input'
-                : e.type === 'change'
-                ? 'data-plugin-handler-change'
-                : null;
+                  ? 'data-plugin-handler-input'
+                  : e.type === 'change'
+                    ? 'data-plugin-handler-change'
+                    : null;
 
             if (!handlerAttr) return;
 

@@ -217,7 +217,7 @@ function isCssStructurallyBalanced(css: string): boolean {
   let braceDepth = 0;
   const state = createCssLexState();
 
-  for (let cursor = 0; cursor < css.length; ) {
+  for (let cursor = 0; cursor < css.length;) {
     const nextCursor = consumeCssLiteral(css, cursor, state);
     if (nextCursor !== null) {
       cursor = nextCursor;

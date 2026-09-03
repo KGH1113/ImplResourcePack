@@ -187,7 +187,6 @@ const LayerTabContent: React.FC<LayerTabContentProps> = ({
 
   // 접기/펼치기 시 displayIndex 앵커 리셋 (stale 인덱스 방지)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- collapsedGroups 변경 시 stale 앵커 리셋 (의도적)
     setLastClickedDisplayIndex(null);
   }, [collapsedGroups]);
 
@@ -555,8 +554,8 @@ const LayerTabContent: React.FC<LayerTabContentProps> = ({
                         isSelected
                           ? 'bg-[#3B82F6]/20 text-[#DBDEE8]'
                           : dnd.isDragging
-                          ? 'text-[#9B9DA5]'
-                          : 'hover:bg-[#2A2A30] text-[#9B9DA5]'
+                            ? 'text-[#9B9DA5]'
+                            : 'hover:bg-[#2A2A30] text-[#9B9DA5]'
                       }
                     `}
                   >
@@ -697,8 +696,8 @@ const LayerTabContent: React.FC<LayerTabContentProps> = ({
                       isItemSelected(item)
                         ? 'bg-[#3B82F6]/20 text-[#DBDEE8]'
                         : dnd.isDragging
-                        ? 'text-[#8B8D95]'
-                        : 'hover:bg-[#2A2A30] text-[#8B8D95]'
+                          ? 'text-[#8B8D95]'
+                          : 'hover:bg-[#2A2A30] text-[#8B8D95]'
                     }
                   `}
                 >

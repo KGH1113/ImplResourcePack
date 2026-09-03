@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/refs */
 import React, { useEffect, useRef, useState } from 'react';
 import type { ImageFit, KeyPosition } from '@src/types/key/keys';
 import type { StatItemPosition, StatItemType } from '@src/types/key/statItems';
@@ -844,9 +843,7 @@ export const SingleKnobPanel: React.FC<SingleKnobPanelProps> = ({
 
   type KnobColorTarget = 'backgroundColor' | 'borderColor';
   type KnobColorProperty =
-    | KnobColorTarget
-    | 'activeBackgroundColor'
-    | 'activeBorderColor';
+    KnobColorTarget | 'activeBackgroundColor' | 'activeBorderColor';
 
   const [pickerFor, setPickerFor] = useState<KnobColorTarget | null>(null);
   const [colorState, setColorState] = useState<'idle' | 'active'>('idle');
@@ -1047,8 +1044,8 @@ export const SingleKnobPanel: React.FC<SingleKnobPanelProps> = ({
                   {capturing
                     ? t('propertiesPanel.knobCapturing') || '감지 중…'
                     : singleKnobPosition.axisId
-                    ? axisLabel
-                    : t('propertiesPanel.knobCapture') || '노브 돌려서 감지'}
+                      ? axisLabel
+                      : t('propertiesPanel.knobCapture') || '노브 돌려서 감지'}
                 </span>
               </button>
             </PropertyRow>

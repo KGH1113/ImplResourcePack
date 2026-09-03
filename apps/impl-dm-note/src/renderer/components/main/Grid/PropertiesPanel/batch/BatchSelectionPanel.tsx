@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/refs */
 import React from 'react';
 import type {
   KeyPosition,
@@ -63,12 +62,7 @@ const RenameIcon: React.FC = () => (
 // ============================================================================
 
 type BatchPickerTarget =
-  | 'noteColor'
-  | 'glowColor'
-  | 'borderColor'
-  | 'fill'
-  | 'stroke'
-  | null;
+  'noteColor' | 'glowColor' | 'borderColor' | 'fill' | 'stroke' | null;
 
 type MixedValueResult<T> = { isMixed: boolean; value: T };
 type MixedValueGetter<P> = <T>(
@@ -505,8 +499,8 @@ export const BatchKeyLikePanel: React.FC<BatchKeyLikePanelProps> = ({
           ? 'fillActive'
           : 'fillIdle'
         : batchCounterColorState === 'active'
-        ? 'strokeActive'
-        : 'strokeIdle';
+          ? 'strokeActive'
+          : 'strokeIdle';
 
     if (batchPickerFor === target) {
       return batchLocalColors[key];
@@ -517,8 +511,8 @@ export const BatchKeyLikePanel: React.FC<BatchKeyLikePanelProps> = ({
         ? batchCounterSettings.fill.active
         : batchCounterSettings.fill.idle
       : batchCounterColorState === 'active'
-      ? batchCounterSettings.stroke.active
-      : batchCounterSettings.stroke.idle;
+        ? batchCounterSettings.stroke.active
+        : batchCounterSettings.stroke.idle;
   };
 
   return (
@@ -884,8 +878,8 @@ export const BatchKeyLikePanel: React.FC<BatchKeyLikePanelProps> = ({
               batchPickerFor === 'noteColor'
                 ? batchLocalOpacities.noteOpacity
                 : batchPickerFor === 'glowColor'
-                ? batchLocalOpacities.glowOpacity
-                : undefined
+                  ? batchLocalOpacities.glowOpacity
+                  : undefined
             }
             onOpacityPercentChange={(value: number) => {
               if (batchPickerFor === 'noteColor') {
@@ -921,15 +915,15 @@ export const BatchKeyLikePanel: React.FC<BatchKeyLikePanelProps> = ({
               batchPickerFor === 'noteColor'
                 ? t('keySetting.noteOpacity') || '노트 투명도'
                 : batchPickerFor === 'glowColor'
-                ? t('keySetting.noteGlowOpacity') || '글로우 투명도'
-                : undefined
+                  ? t('keySetting.noteGlowOpacity') || '글로우 투명도'
+                  : undefined
             }
             opacityPercentMixed={
               batchPickerFor === 'noteColor'
                 ? noteOpacityMixed
                 : batchPickerFor === 'glowColor'
-                ? glowOpacityMixed
-                : false
+                  ? glowOpacityMixed
+                  : false
             }
           />
         )}

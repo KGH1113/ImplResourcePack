@@ -5,7 +5,6 @@ import { useSettingsStore } from '@stores/useSettingsStore';
 import { useKeyStore } from '@stores/data/useKeyStore';
 import Checkbox from '@components/main/common/Checkbox';
 import Dropdown from '@components/main/common/Dropdown';
-import FlaskIcon from '@assets/svgs/flask.svg';
 import ResetIcon from '@assets/svgs/reset.svg';
 import { PluginManagerModal } from '@components/main/Modal/content/managers/PluginManagerModal';
 import { PluginDataDeleteModal } from '@components/main/Modal/content/dialogs/PluginDataDeleteModal';
@@ -34,26 +33,6 @@ import type {
 } from '@api/modules/resourceApi';
 import type { ObsStatus } from '@src/types/obs';
 import { DEFAULT_OBS_PORT } from '@src/types/obs';
-
-// 설정 미리보기 영상
-const PREVIEW_SOURCES: Record<string, string> = {
-  overlayLock:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/overlay-lock.webm',
-  alwaysOnTop:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/alwaysontop.webm',
-  noteEffect:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/noteeffect.webm',
-  keyCounter:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/counter.webm',
-  customCSS:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/css.webm',
-  customJS:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/plugin.webm',
-  resizeAnchor:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/resize.webm',
-  obsMode:
-    'https://raw.githubusercontent.com/lee-sihun/DmNote/master/docs/assets/webm/obs.webm',
-};
 
 // ASIO 버퍼 크기 선택지(프레임). 게임 설정값과 맞춰야 ASIO 공존 가능.
 const ASIO_BUFFER_SIZES = [64, 128, 256, 512, 1024] as const;
@@ -135,7 +114,6 @@ const Settings = ({
     setShortcuts,
   } = useSettingsStore();
 
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [isScrollHovered, setIsScrollHovered] = useState<boolean>(false);
   const [isPluginModalOpen, setPluginModalOpen] = useState<boolean>(false);
   const [isDataDeleteModalOpen, setDataDeleteModalOpen] =
@@ -507,9 +485,8 @@ const Settings = ({
 
       // 네임스페이스를 prefix로 사용하는 데이터가 있는지 확인
       // 백엔드에서 자동으로 "plugin_data_" 를 붙이므로 순수 네임스페이스만 전달
-      const hasData: boolean = await window.api.plugin.storage.hasData(
-        pluginNamespace,
-      );
+      const hasData: boolean =
+        await window.api.plugin.storage.hasData(pluginNamespace);
       console.warn(
         '[PluginRemove] namespace=',
         pluginNamespace,
@@ -814,8 +791,6 @@ const Settings = ({
             <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
-                onMouseEnter={() => setHoveredKey('overlayLock')}
-                onMouseLeave={() => setHoveredKey(null)}
                 onClick={handleOverlayLockChange}
               >
                 <p className="text-style-3 text-[#FFFFFF]">
@@ -828,8 +803,6 @@ const Settings = ({
               </div>
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
-                onMouseEnter={() => setHoveredKey('alwaysOnTop')}
-                onMouseLeave={() => setHoveredKey(null)}
                 onClick={handleAlwaysOnTopChange}
               >
                 <p className="text-style-3 text-[#FFFFFF]">
@@ -842,8 +815,6 @@ const Settings = ({
               </div>
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
-                onMouseEnter={() => setHoveredKey('noteEffect')}
-                onMouseLeave={() => setHoveredKey(null)}
                 onClick={handleNoteEffectChange}
               >
                 <p className="text-style-3 text-[#FFFFFF]">
@@ -856,8 +827,6 @@ const Settings = ({
               </div>
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
-                onMouseEnter={() => setHoveredKey('keyCounter')}
-                onMouseLeave={() => setHoveredKey(null)}
                 onClick={handleKeyCounterToggle}
               >
                 <p className="text-style-3 text-[#FFFFFF]">
@@ -902,11 +871,7 @@ const Settings = ({
                 <Checkbox checked={trayEnabled} onChange={handleTrayToggle} />
               </div>
               {null}
-              <div
-                className="flex flex-row justify-between items-center h-[40px]"
-                onMouseEnter={() => setHoveredKey('resizeAnchor')}
-                onMouseLeave={() => setHoveredKey(null)}
-              >
+              <div className="flex flex-row justify-between items-center h-[40px]">
                 <p className="text-style-3 text-[#FFFFFF]">
                   {t('settings.resizeAnchor')}
                 </p>
@@ -931,11 +896,7 @@ const Settings = ({
             </div>
             {/* 커스텀 CSS & JS 설정 */}
             <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
-              <div
-                className="flex flex-col gap-[0px]"
-                onMouseEnter={() => setHoveredKey('customCSS')}
-                onMouseLeave={() => setHoveredKey(null)}
-              >
+              <div className="flex flex-col gap-[0px]">
                 <div
                   className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
                   onClick={handleToggleCustomCSS}
@@ -973,11 +934,7 @@ const Settings = ({
                   </button>
                 </div>
               </div>
-              <div
-                className="flex flex-col gap-[0px]"
-                onMouseEnter={() => setHoveredKey('customJS')}
-                onMouseLeave={() => setHoveredKey(null)}
-              >
+              <div className="flex flex-col gap-[0px]">
                 <div
                   className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
                   onClick={handleToggleCustomJS}
@@ -1033,14 +990,13 @@ const Settings = ({
                     </button>
                   </div>
                 </div>
+                <p className="pb-[8px] text-[11px] leading-[15px] text-[#989BA6]">
+                  {t('settings.pluginSecurityWarning')}
+                </p>
               </div>
             </div>
             {/* OBS 모드 */}
-            <div
-              className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]"
-              onMouseEnter={() => setHoveredKey('obsMode')}
-              onMouseLeave={() => setHoveredKey(null)}
-            >
+            <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
               <div
                 className="flex flex-row justify-between items-center h-[40px] cursor-pointer"
                 onClick={handleObsToggle}
@@ -1101,11 +1057,7 @@ const Settings = ({
             </div>
             {/* 키음 출력 설정 */}
             <div className="flex flex-col p-[19px] py-[7px] bg-primary rounded-[7px] gap-[0px]">
-              <div
-                className="flex flex-row justify-between items-center h-[40px]"
-                onMouseEnter={() => setHoveredKey('keySoundOutput')}
-                onMouseLeave={() => setHoveredKey(null)}
-              >
+              <div className="flex flex-row justify-between items-center h-[40px]">
                 <p className="text-style-3 text-[#FFFFFF] flex-1 min-w-0 truncate pr-[10px]">
                   {t('settings.keySoundOutput') || '키 사운드 출력'}
                 </p>
@@ -1243,32 +1195,6 @@ const Settings = ({
             </div>
           </div>
         </div>
-      </div>
-      <div className="absolute flex items-center justify-center top-[10px] right-[10px] w-[522px] h-[376px] bg-primary rounded-[7px] pointer-events-none overflow-hidden">
-        {hoveredKey && PREVIEW_SOURCES[hoveredKey] ? (
-          <div className="relative w-full h-full">
-            <video
-              key={hoveredKey}
-              src={PREVIEW_SOURCES[hoveredKey]}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center items-end h-[100px] bg-gradient-to-t from-black to-transparent pointer-events-none">
-              <span className="mb-[15px] text-white text-[15px] font-medium">
-                {t(
-                  hoveredKey === 'obsMode'
-                    ? 'settings.obsGuide'
-                    : `settings.${hoveredKey}Desc`,
-                )}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <FlaskIcon />
-        )}
       </div>
       {isPluginModalOpen && (
         <PluginManagerModal

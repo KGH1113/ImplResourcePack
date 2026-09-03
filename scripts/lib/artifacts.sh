@@ -17,6 +17,7 @@ copy_core_payload() {
   require_file "$IMPL_RESOURCEPACK_PROJECT_ROOT/ImplResourcePack/Info.json"
   require_file "$IMPL_RESOURCEPACK_PROJECT_ROOT/ImplResourcePack/AdofaiIpcBootstrap.json"
   require_file "$IMPL_RESOURCEPACK_PROJECT_ROOT/THIRD_PARTY_NOTICES.md"
+  require_file "$IMPL_RESOURCEPACK_PROJECT_ROOT/LICENSE.md"
   require_file "$IMPL_RESOURCEPACK_BUILD_OUTPUT/ImplResourcePack.dll"
   require_file "$IMPL_RESOURCEPACK_BOOTSTRAP_BUILD_OUTPUT/ImplResourcePack.Bootstrap.dll"
   require_file "$ADOFAI_IPC_DEPENDENCY_SHIM_DLL"
@@ -32,6 +33,7 @@ copy_core_payload() {
   cp "$IMPL_RESOURCEPACK_BOOTSTRAP_BUILD_OUTPUT/ImplResourcePack.Bootstrap.dll" "$destination/"
   cp "$ADOFAI_IPC_DEPENDENCY_SHIM_DLL" "$destination/"
   cp "$IMPL_RESOURCEPACK_PROJECT_ROOT/THIRD_PARTY_NOTICES.md" "$destination/"
+  cp "$IMPL_RESOURCEPACK_PROJECT_ROOT/LICENSE.md" "$destination/"
   mkdir -p "$destination/DependencyBootstrap/versions/$ADOFAIIPC_BOOTSTRAP_VERSION"
   cp "$ADOFAI_IPC_BOOTSTRAP_DLL" \
     "$destination/DependencyBootstrap/versions/$ADOFAIIPC_BOOTSTRAP_VERSION/"

@@ -56,7 +56,7 @@ const SoundManagerModal = ({
   const normalizedSelectedSound = (selectedSound || '').trim();
 
   const editingSoundItem = editingSoundPath
-    ? sounds.find((s) => s.soundPath === editingSoundPath) ?? null
+    ? (sounds.find((s) => s.soundPath === editingSoundPath) ?? null)
     : null;
 
   const loadSounds = async () => {

@@ -1173,14 +1173,14 @@ const CounterAnimationEditorModal = ({
                       count={previewCount}
                       fillColor={
                         previewActive
-                          ? counterSettings?.fill.active ?? '#FFFFFF'
-                          : counterSettings?.fill.idle ??
-                            'rgba(121, 121, 121, 0.9)'
+                          ? (counterSettings?.fill.active ?? '#FFFFFF')
+                          : (counterSettings?.fill.idle ??
+                            'rgba(121, 121, 121, 0.9)')
                       }
                       strokeColor={
                         previewActive
-                          ? counterSettings?.stroke.active ?? 'transparent'
-                          : counterSettings?.stroke.idle ?? 'transparent'
+                          ? (counterSettings?.stroke.active ?? 'transparent')
+                          : (counterSettings?.stroke.idle ?? 'transparent')
                       }
                       globalKey="preview"
                       active={previewActive}
@@ -1204,14 +1204,14 @@ const CounterAnimationEditorModal = ({
                   const useInline = keyVisual?.useInlineStyles === true;
                   const keyActive = previewActive && !keyVisual?.isStat;
                   const stateBackgroundColor = keyActive
-                    ? keyVisual?.activeBackgroundColor ??
-                      keyVisual?.backgroundColor
+                    ? (keyVisual?.activeBackgroundColor ??
+                      keyVisual?.backgroundColor)
                     : keyVisual?.backgroundColor;
                   const stateBorderColor = keyActive
-                    ? keyVisual?.activeBorderColor ?? keyVisual?.borderColor
+                    ? (keyVisual?.activeBorderColor ?? keyVisual?.borderColor)
                     : keyVisual?.borderColor;
                   const stateFontColor = keyActive
-                    ? keyVisual?.activeFontColor ?? keyVisual?.fontColor
+                    ? (keyVisual?.activeFontColor ?? keyVisual?.fontColor)
                     : keyVisual?.fontColor;
                   const defaultBgColor = keyActive
                     ? 'rgba(121, 121, 121, 0.9)'

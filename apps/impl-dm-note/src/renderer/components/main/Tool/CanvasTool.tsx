@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '@contexts/useTranslation';
 import MoveIcon from '@assets/svgs/move.svg';
@@ -115,12 +114,12 @@ const CanvasTool = ({
               toolItem.key === 'move'
                 ? t('tooltip.move')
                 : toolItem.key === 'eraser'
-                ? t('tooltip.delete')
-                : toolItem.key === 'layer'
-                ? t('tooltip.add')
-                : toolItem.key === 'primary'
-                ? t('tooltip.palette')
-                : t('tooltip.resetCurrentTab')
+                  ? t('tooltip.delete')
+                  : toolItem.key === 'layer'
+                    ? t('tooltip.add')
+                    : toolItem.key === 'primary'
+                      ? t('tooltip.palette')
+                      : t('tooltip.resetCurrentTab')
             }
           >
             <IconButton
@@ -128,10 +127,10 @@ const CanvasTool = ({
                 toolItem.key === 'primary'
                   ? primaryButtonRef
                   : toolItem.key === 'layer'
-                  ? (addButtonRef as unknown as React.Ref<HTMLButtonElement>)
-                  : toolItem.key === 'broom'
-                  ? (resetButtonRef as unknown as React.Ref<HTMLButtonElement>)
-                  : undefined
+                    ? (addButtonRef as unknown as React.Ref<HTMLButtonElement>)
+                    : toolItem.key === 'broom'
+                      ? (resetButtonRef as unknown as React.Ref<HTMLButtonElement>)
+                      : undefined
               }
               icon={toolItem.icon}
               isSelected={!!toolItem.selected}

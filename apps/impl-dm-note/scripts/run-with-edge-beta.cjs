@@ -1,14 +1,14 @@
-const { execSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const edgeBetaPath =
-  "C:\\Program Files (x86)\\Microsoft\\Edge Beta\\Application";
+  'C:\\Program Files (x86)\\Microsoft\\Edge Beta\\Application';
 
 try {
   // Edge Beta 폴더가 존재하는지 확인
   if (!fs.existsSync(edgeBetaPath)) {
-    console.error("Edge Beta가 설치되지 않았습니다.");
+    console.error('Edge Beta가 설치되지 않았습니다.');
     process.exit(1);
   }
 
@@ -23,15 +23,15 @@ try {
   });
 
   if (versionFolders.length === 0) {
-    console.error("Edge Beta 버전 폴더를 찾을 수 없습니다.");
+    console.error('Edge Beta 버전 폴더를 찾을 수 없습니다.');
     process.exit(1);
   }
 
   // 최신 버전 선택 (정렬 후 마지막 요소)
   const latestVersion = versionFolders
     .sort((a, b) => {
-      const aParts = a.split(".").map(Number);
-      const bParts = b.split(".").map(Number);
+      const aParts = a.split('.').map(Number);
+      const bParts = b.split('.').map(Number);
       for (let i = 0; i < 4; i++) {
         if (aParts[i] !== bParts[i]) return aParts[i] - bParts[i];
       }
@@ -45,12 +45,12 @@ try {
   // 환경 변수 설정하고 tauri dev 실행
   process.env.WEBVIEW2_BROWSER_EXECUTABLE_FOLDER = webview2Path;
 
-  execSync("tauri dev -f asio-backend", {
-    stdio: "inherit",
+  execSync('tauri dev -f asio-backend', {
+    stdio: 'inherit',
     env: process.env,
     shell: true,
   });
 } catch (error) {
-  console.error("실행 중 오류 발생:", error.message);
+  console.error('실행 중 오류 발생:', error.message);
   process.exit(1);
 }

@@ -98,10 +98,10 @@ const FontManagerModal = ({ isOpen, onClose, t }: FontManagerModalProps) => {
           ext === 'otf'
             ? 'opentype'
             : ext === 'woff'
-            ? 'woff'
-            : ext === 'woff2'
-            ? 'woff2'
-            : 'truetype';
+              ? 'woff'
+              : ext === 'woff2'
+                ? 'woff2'
+                : 'truetype';
         css = `@font-face {\n  font-family: '${previewFontFamily}';\n  src: url('${url}') format('${format}');\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}`;
       } else if (font.type === 'web' && font.cssContent) {
         // 웹폰트 CSS에서 font-family를 preview 이름으로 교체

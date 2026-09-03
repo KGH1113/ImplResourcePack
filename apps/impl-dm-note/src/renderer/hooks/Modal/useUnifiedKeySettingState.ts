@@ -159,10 +159,7 @@ export interface RollbackData {
 }
 
 export type PreviewData =
-  | KeyPreviewData
-  | NotePreviewData
-  | CounterPreviewData
-  | RollbackData;
+  KeyPreviewData | NotePreviewData | CounterPreviewData | RollbackData;
 
 // 저장 데이터 타입
 export interface SaveData {

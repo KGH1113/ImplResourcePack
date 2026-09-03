@@ -10,6 +10,6 @@
     "core:window:allow-outer-position",
     "core:window:allow-outer-size",
     "core:window:allow-set-position",
-    "dmnote-allow-all"
+    "impl-dm-note-allow-all"
   ]
 }

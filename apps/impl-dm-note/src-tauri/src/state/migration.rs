@@ -282,9 +282,11 @@ pub(crate) fn restore_missing_viewer_data_from_backup(
                 changed = true;
             }
         }
-        if !state.tab_css_overrides.contains_key(&tab_id) {
-            if let Some(css) = backup.tab_css_overrides.get(&tab_id) {
-                state.tab_css_overrides.insert(tab_id, css.clone());
+        if let Some(css) = backup.tab_css_overrides.get(&tab_id) {
+            if let std::collections::hash_map::Entry::Vacant(entry) =
+                state.tab_css_overrides.entry(tab_id)
+            {
+                entry.insert(css.clone());
                 changed = true;
             }
         }
@@ -302,7 +304,7 @@ pub(crate) fn migrate_legacy_ghost_keys(positions_by_mode: &mut KeyPositions) ->
                 continue;
             };
             let tokens: Vec<&str> = class_name.split_whitespace().collect();
-            if !tokens.iter().any(|token| *token == "ghost") {
+            if !tokens.contains(&"ghost") {
                 continue;
             }
             position.key_limiter_excluded = true;
@@ -739,9 +741,6 @@ fn repair_legacy_state(raw: &str) -> AppStoreData {
         }
         if let Some(v) = obj.get("trayEnabled").and_then(Value::as_bool) {
             data.tray_enabled = v;
-        }
-        if let Some(v) = obj.get("autoUpdateEnabled").and_then(Value::as_bool) {
-            data.auto_update_enabled = v;
         }
         if let Some(v) = obj.get("mainWindowHidden").and_then(Value::as_bool) {
             data.main_window_hidden = v;

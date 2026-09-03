@@ -2,6 +2,16 @@
 
 JALib에 의존하지 않는 A Dance of Fire and Ice용 UnityModManager 오버레이 모드입니다.
 
+## 라이선스 범위
+
+| 범위                        | 라이선스                     | 설명                                                                                                                                                  |
+| --------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 저장소 루트(아래 예외 제외) | source-available proprietary | 개인·비상업적 공식 빌드 사용과 공식 저장소 기여 준비만 허용됩니다. 자세한 내용은 [`LICENSE.md`](LICENSE.md)를 확인하세요.                             |
+| `apps/impl-dm-note/**`      | GPL-3.0-only                 | DM Note v1.6.1 기반의 독립 구성요소입니다. 앱의 [`LICENSE`](apps/impl-dm-note/LICENSE)와 [`UPSTREAM.md`](apps/impl-dm-note/UPSTREAM.md)가 적용됩니다. |
+| 서드파티 코드·폰트·자산     | 각 고유 조건                 | [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)와 구성요소별 고지를 확인하세요.                                                                    |
+
+기여 절차와 권리 조건은 [`CONTRIBUTING.md`](CONTRIBUTING.md) 및 [`CONTRIBUTOR_AGREEMENT.md`](CONTRIBUTOR_AGREEMENT.md)에 정리되어 있습니다.
+
 현재는 Jipper 스타일의 싱글 플레이 판정 오버레이를 제공합니다. 데스크톱 키뷰어는 `apps/impl-dm-note`의 독립 애플리케이션 ImplDmNote로 제공합니다.
 
 - 진행도 및 진행도 바
@@ -34,7 +44,7 @@ npm run desktop:check
 npm run desktop:build
 ```
 
-원본과 변경 이력은 `apps/impl-dm-note/UPSTREAM.md`, 라이선스는 `apps/impl-dm-note/LICENSE`를 참고하세요.
+원본과 변경 이력은 [`apps/impl-dm-note/UPSTREAM.md`](apps/impl-dm-note/UPSTREAM.md), 라이선스는 [`apps/impl-dm-note/LICENSE`](apps/impl-dm-note/LICENSE)를 참고하세요. 커스텀 JavaScript 플러그인은 샌드박스되지 않으며 앱 사용자와 같은 권한으로 실행되므로 신뢰하는 코드만 설치해야 합니다.
 
 판정 오버레이는 JipperResourcePack과 동일한 `MAPLESTORY_OTF_BOLD SDF` 폰트 자산을 플랫폼별 AssetBundle에서 로드합니다.
 

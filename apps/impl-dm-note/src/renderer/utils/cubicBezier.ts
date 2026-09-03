@@ -5,12 +5,7 @@ export const COUNTER_DEFAULT_BEZIER: CounterAnimationBezier = [
 ];
 
 export type CounterBezierPresetId =
-  | 'current'
-  | 'linear'
-  | 'easeOut'
-  | 'easeIn'
-  | 'easeInOut'
-  | 'overshoot';
+  'current' | 'linear' | 'easeOut' | 'easeIn' | 'easeInOut' | 'overshoot';
 
 export interface CounterBezierPreset {
   id: CounterBezierPresetId;

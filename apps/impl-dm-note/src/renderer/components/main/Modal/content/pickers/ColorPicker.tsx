@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { useTranslation } from '@contexts/useTranslation';
 import {
@@ -43,8 +42,7 @@ interface ColorPickerWrapperProps {
   solidOnly?: boolean;
   stateMode?: string;
   onStateModeChange?:
-    | React.Dispatch<React.SetStateAction<string>>
-    | ((mode: string) => void);
+    React.Dispatch<React.SetStateAction<string>> | ((mode: string) => void);
   opacityPercent?: number | { top: number; bottom: number };
   onOpacityPercentChange?: (value: number, target: OpacityTarget) => void;
   onOpacityPercentChangeComplete?: (
@@ -103,8 +101,8 @@ const ColorPickerWrapper = ({
   const initialMode = solidOnly
     ? MODES.solid
     : isGradientColor(color)
-    ? MODES.gradient
-    : MODES.solid;
+      ? MODES.gradient
+      : MODES.solid;
   const [mode, setMode] = useState<string>(initialMode);
   const baseColor = normalizeColorInput(color);
   const [selectedColor, setSelectedColor] = useColor(baseColor);
@@ -854,44 +852,44 @@ const ColorPickerWrapper = ({
               solidOnly
                 ? alpha
                 : showOpacityControl
-                ? clampOpacityPercent(opacityPercent as number) / 100
-                : undefined
+                  ? clampOpacityPercent(opacityPercent as number) / 100
+                  : undefined
             }
             alphaPercentValue={
               solidOnly
                 ? alphaPercentInput
                 : showOpacityControl
-                ? opacityPercentSolidInput
-                : undefined
+                  ? opacityPercentSolidInput
+                  : undefined
             }
             alphaPercentFocused={
               solidOnly
                 ? isAlphaPercentFocused
                 : showOpacityControl
-                ? opacityPercentFocusTarget === 'solid'
-                : false
+                  ? opacityPercentFocusTarget === 'solid'
+                  : false
             }
             onAlphaPercentChange={
               solidOnly
                 ? handleAlphaPercentChange
                 : showOpacityControl
-                ? handleOpacityPercentSolidChange
-                : undefined
+                  ? handleOpacityPercentSolidChange
+                  : undefined
             }
             onAlphaPercentCommit={
               solidOnly
                 ? commitAlphaPercent
                 : showOpacityControl
-                ? commitOpacityPercentSolid
-                : undefined
+                  ? commitOpacityPercentSolid
+                  : undefined
             }
             onAlphaPercentFocusChange={
               solidOnly
                 ? setIsAlphaPercentFocused
                 : showOpacityControl
-                ? (focused: boolean) =>
-                    setOpacityPercentFocusTarget(focused ? 'solid' : null)
-                : undefined
+                  ? (focused: boolean) =>
+                      setOpacityPercentFocusTarget(focused ? 'solid' : null)
+                  : undefined
             }
           />
         ) : (

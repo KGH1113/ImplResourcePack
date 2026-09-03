@@ -90,8 +90,8 @@ export const displayElementApi = {
     const stateSnapshot = initialState
       ? { ...initialState }
       : templateFn
-      ? {}
-      : undefined;
+        ? {}
+        : undefined;
 
     const htmlContent = typeof initialHtml === 'string' ? initialHtml : '';
 

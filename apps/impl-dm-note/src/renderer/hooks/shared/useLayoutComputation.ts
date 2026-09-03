@@ -1,8 +1,8 @@
 import {
   DEFAULT_NOTE_BORDER_RADIUS,
   DEFAULT_NOTE_SETTINGS,
+  FALLBACK_POSITION,
 } from '@constants/overlayDefaults';
-import { FALLBACK_POSITION } from '@components/shared/OverlayScene';
 import type { KeyPosition } from '@src/types/key/keys';
 import type { StatItemPosition } from '@src/types/key/statItems';
 import type { GraphItemPosition } from '@src/types/key/graphItems';
@@ -91,8 +91,8 @@ export function computeLayout(input: LayoutInput) {
           noteAlign === 'left'
             ? 0
             : noteAlign === 'right'
-            ? keyWidth - desiredNoteWidth
-            : (keyWidth - desiredNoteWidth) / 2;
+              ? keyWidth - desiredNoteWidth
+              : (keyWidth - desiredNoteWidth) / 2;
         const noteLeft = pos.dx + alignOff + userOffsetX;
         const noteRight = noteLeft + desiredNoteWidth;
         xs.push(noteLeft);
@@ -220,8 +220,8 @@ export function computeLayout(input: LayoutInput) {
         noteAlign === 'left'
           ? 0
           : noteAlign === 'right'
-          ? keyWidth - desiredNoteWidth
-          : (keyWidth - desiredNoteWidth) / 2;
+            ? keyWidth - desiredNoteWidth
+            : (keyWidth - desiredNoteWidth) / 2;
       const userOffsetX = position.noteOffsetX ?? 0;
       const userOffsetY = position.noteOffsetY ?? 0;
 

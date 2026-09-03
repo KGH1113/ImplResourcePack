@@ -1009,10 +1009,10 @@ export const PluginElement: React.FC<PluginElementProps> = ({
           e.type === 'click'
             ? 'data-plugin-handler'
             : e.type === 'input'
-            ? 'data-plugin-handler-input'
-            : e.type === 'change'
-            ? 'data-plugin-handler-change'
-            : null;
+              ? 'data-plugin-handler-input'
+              : e.type === 'change'
+                ? 'data-plugin-handler-change'
+                : null;
 
         if (!handlerAttr) return;
 
@@ -1234,8 +1234,8 @@ export const PluginElement: React.FC<PluginElementProps> = ({
         element.draggable && windowType === 'main'
           ? 'move'
           : element.onClick && windowType === 'main'
-          ? 'pointer'
-          : 'default',
+            ? 'pointer'
+            : 'default',
       willChange: shouldPromoteTransformLayer ? 'transform' : 'auto',
       pointerEvents: windowType === 'main' ? 'auto' : 'none',
     };

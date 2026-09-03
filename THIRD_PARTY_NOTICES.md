@@ -14,8 +14,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
 
-## Maplestory OTF Bold
+## MapleStory OTF Bold
 
-ImplResourcePack includes the `MAPLESTORY_OTF_BOLD` font and its TextMesh Pro SDF asset as distributed by [Jongye0l/JipperResourcePack](https://github.com/Jongye0l/JipperResourcePack).
+ImplResourcePack includes the `MAPLESTORY_OTF_BOLD` font-derived TextMesh Pro SDF asset as obtained from [Jongye0l/JipperResourcePack](https://github.com/Jongye0l/JipperResourcePack). No additional conversion or modification is performed by this repository.
 
-JipperResourcePack credits the font as [Maplestory OTF Bold](https://fontmeme.com/ktype/maplestory-font/). Confirm the font's redistribution terms separately before publishing a public release of ImplResourcePack.
+The MapleStory typeface is owned by NEXON Korea Corporation. The [official font terms](https://maplestory.nexon.com/Media/Font) permit free use by individuals and businesses and permit redistribution or bundling with a copyright notice. The font itself may not be modified or edited, and it may not be sold for a fee. Attribution is recommended by the official terms.
+
+MapleStory and NEXON are trademarks or registered marks of their respective owners. Inclusion of the font asset does not imply endorsement.
+
+## ImplDmNote runtime artwork
+
+ImplDmNote retains the upstream DM Note application icon and in-app logo that are required at runtime. They are included as part of the GPL-3.0-only upstream work and are attributed to the DM Note project and its original designer in `apps/impl-dm-note/UPSTREAM.md`. Documentation logos and promotional media are not redistributed by this repository.

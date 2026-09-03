@@ -309,45 +309,6 @@ fn backup_pre_key_viewer_tabs_store(path: &Path) -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-mod viewer_tab_backup_tests {
-    use super::backup_pre_key_viewer_tabs_store;
-    use std::fs;
-    use tempfile::tempdir;
-
-    #[test]
-    fn backs_up_legacy_store_once_and_preserves_original_backup() {
-        let dir = tempdir().expect("temporary directory");
-        let store_path = dir.path().join("store.json");
-        let backup_path = dir.path().join("store.pre-keyviewer-tabs.json");
-        fs::write(&store_path, r#"{"selectedKeyType":"4key"}"#).expect("legacy store");
-
-        backup_pre_key_viewer_tabs_store(&store_path).expect("first backup");
-        assert_eq!(
-            fs::read_to_string(&backup_path).expect("backup contents"),
-            r#"{"selectedKeyType":"4key"}"#
-        );
-
-        fs::write(&store_path, r#"{"selectedKeyType":"changed"}"#).expect("changed store");
-        backup_pre_key_viewer_tabs_store(&store_path).expect("second backup attempt");
-        assert_eq!(
-            fs::read_to_string(&backup_path).expect("preserved backup"),
-            r#"{"selectedKeyType":"4key"}"#
-        );
-    }
-
-    #[test]
-    fn skips_backup_for_already_migrated_store() {
-        let dir = tempdir().expect("temporary directory");
-        let store_path = dir.path().join("store.json");
-        let backup_path = dir.path().join("store.pre-keyviewer-tabs.json");
-        fs::write(&store_path, r#"{"keyViewerTabsMigrated":true}"#).expect("migrated store");
-
-        backup_pre_key_viewer_tabs_store(&store_path).expect("backup check");
-        assert!(!backup_path.exists());
-    }
-}
-
 fn settings_from_store(store: &AppStoreData) -> SettingsState {
     let mut custom_js = store.custom_js.clone();
     let _ = custom_js.normalize();
@@ -363,7 +324,6 @@ fn settings_from_store(store: &AppStoreData) -> SettingsState {
         laboratory_enabled: store.laboratory_enabled,
         developer_mode_enabled: store.developer_mode_enabled,
         tray_enabled: store.tray_enabled,
-        auto_update_enabled: store.auto_update_enabled,
         background_color: store.background_color.clone(),
         use_custom_css: store.use_custom_css,
         custom_css: store.custom_css.clone(),
@@ -583,4 +543,43 @@ fn sweep_unreferenced_asset_files(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod viewer_tab_backup_tests {
+    use super::backup_pre_key_viewer_tabs_store;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn backs_up_legacy_store_once_and_preserves_original_backup() {
+        let dir = tempdir().expect("temporary directory");
+        let store_path = dir.path().join("store.json");
+        let backup_path = dir.path().join("store.pre-keyviewer-tabs.json");
+        fs::write(&store_path, r#"{"selectedKeyType":"4key"}"#).expect("legacy store");
+
+        backup_pre_key_viewer_tabs_store(&store_path).expect("first backup");
+        assert_eq!(
+            fs::read_to_string(&backup_path).expect("backup contents"),
+            r#"{"selectedKeyType":"4key"}"#
+        );
+
+        fs::write(&store_path, r#"{"selectedKeyType":"changed"}"#).expect("changed store");
+        backup_pre_key_viewer_tabs_store(&store_path).expect("second backup attempt");
+        assert_eq!(
+            fs::read_to_string(&backup_path).expect("preserved backup"),
+            r#"{"selectedKeyType":"4key"}"#
+        );
+    }
+
+    #[test]
+    fn skips_backup_for_already_migrated_store() {
+        let dir = tempdir().expect("temporary directory");
+        let store_path = dir.path().join("store.json");
+        let backup_path = dir.path().join("store.pre-keyviewer-tabs.json");
+        fs::write(&store_path, r#"{"keyViewerTabsMigrated":true}"#).expect("migrated store");
+
+        backup_pre_key_viewer_tabs_store(&store_path).expect("backup check");
+        assert!(!backup_path.exists());
+    }
 }

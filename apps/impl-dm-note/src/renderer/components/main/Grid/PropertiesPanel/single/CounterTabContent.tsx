@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useRef, useState } from 'react';
 import type { CounterTabContentProps } from '../types';
 import type {
@@ -116,8 +115,8 @@ const CounterTabContent: React.FC<CounterTabContentProps> = ({
           ? 'fillActive'
           : 'fillIdle'
         : colorState === 'active'
-        ? 'strokeActive'
-        : 'strokeIdle';
+          ? 'strokeActive'
+          : 'strokeIdle';
 
     setLocalColors((prev) => ({ ...prev, [key]: color }));
   };
@@ -132,8 +131,8 @@ const CounterTabContent: React.FC<CounterTabContentProps> = ({
           ? 'fillActive'
           : 'fillIdle'
         : colorState === 'active'
-        ? 'strokeActive'
-        : 'strokeIdle';
+          ? 'strokeActive'
+          : 'strokeIdle';
 
     setLocalColors((prev) => ({ ...prev, [key]: color }));
 

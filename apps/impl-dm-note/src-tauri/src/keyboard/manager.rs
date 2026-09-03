@@ -11,23 +11,6 @@ pub struct KeyboardManager {
     valid_keys: Arc<RwLock<HashSet<String>>>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn matches_keys_from_non_editor_viewer_tabs() {
-        let mappings = KeyMappings::from([
-            ("hand".to_string(), vec!["KeyA".to_string()]),
-            ("foot".to_string(), vec!["KeyB".to_string()]),
-        ]);
-        let manager = KeyboardManager::new(mappings, "hand");
-
-        assert_eq!(manager.match_candidate(["KeyA"]), Some("KeyA".to_string()));
-        assert_eq!(manager.match_candidate(["KeyB"]), Some("KeyB".to_string()));
-    }
-}
-
 impl KeyboardManager {
     pub fn new(initial: KeyMappings, default_mode: impl Into<String>) -> Self {
         let mappings = Arc::new(RwLock::new(initial));
@@ -85,5 +68,22 @@ impl KeyboardManager {
                 guard.insert(key.clone());
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn matches_keys_from_non_editor_viewer_tabs() {
+        let mappings = KeyMappings::from([
+            ("hand".to_string(), vec!["KeyA".to_string()]),
+            ("foot".to_string(), vec!["KeyB".to_string()]),
+        ]);
+        let manager = KeyboardManager::new(mappings, "hand");
+
+        assert_eq!(manager.match_candidate(["KeyA"]), Some("KeyA".to_string()));
+        assert_eq!(manager.match_candidate(["KeyB"]), Some("KeyB".to_string()));
     }
 }

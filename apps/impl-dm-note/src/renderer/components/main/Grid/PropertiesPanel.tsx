@@ -217,20 +217,20 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     selectedStatElements.length === 1 ? selectedStatElements[0].index : null;
   const singleStatPosition: StatItemPosition | null =
     singleStatIndex !== null
-      ? statItemPositions[selectedKeyType]?.[singleStatIndex] ?? null
+      ? (statItemPositions[selectedKeyType]?.[singleStatIndex] ?? null)
       : null;
   const singleGraphIndex =
     selectedGraphElements.length === 1 ? selectedGraphElements[0].index : null;
   const singleGraphPosition: GraphItemPosition | null =
     singleGraphIndex !== null
-      ? graphItemPositions[selectedKeyType]?.[singleGraphIndex] ?? null
+      ? (graphItemPositions[selectedKeyType]?.[singleGraphIndex] ?? null)
       : null;
   const knobItemPositions = useKnobItemStore((state) => state.positions);
   const singleKnobIndex =
     selectedKnobElements.length === 1 ? selectedKnobElements[0].index : null;
   const singleKnobPosition: KnobItemPosition | null =
     singleKnobIndex != null
-      ? knobItemPositions[selectedKeyType]?.[singleKnobIndex] ?? null
+      ? (knobItemPositions[selectedKeyType]?.[singleKnobIndex] ?? null)
       : null;
   const allLayerGroups = useLayerGroupStore((state) => state.layerGroups);
   const layerGroupsForMode = allLayerGroups[selectedKeyType] || [];
@@ -671,12 +671,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   // 배치 편집용 로컬 ColorPicker 상태
   type BatchPickerTarget =
-    | 'noteColor'
-    | 'glowColor'
-    | 'borderColor'
-    | 'fill'
-    | 'stroke'
-    | null;
+    'noteColor' | 'glowColor' | 'borderColor' | 'fill' | 'stroke' | null;
   const [batchPickerFor, setBatchPickerFor] = useState<BatchPickerTarget>(null);
   const [batchCounterColorState, setBatchCounterColorState] = useState<
     'idle' | 'active'
@@ -2180,8 +2175,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         const normalizedValue = Number.isFinite(numericValue)
           ? numericValue
           : typeof schemaValue.default === 'number'
-          ? schemaValue.default
-          : 0;
+            ? schemaValue.default
+            : 0;
         // step 값에서 소수 자릿수 자동 추론
         const stepStr =
           schemaValue.step != null ? String(schemaValue.step) : '';

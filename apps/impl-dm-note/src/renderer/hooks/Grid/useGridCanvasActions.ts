@@ -231,10 +231,7 @@ export interface DuplicateState {
   sourceIndex: number;
   keyName: string;
   position:
-    | KeyPosition
-    | StatItemPosition
-    | GraphItemPosition
-    | KnobItemPosition;
+    KeyPosition | StatItemPosition | GraphItemPosition | KnobItemPosition;
 }
 
 function getStatTypeLabel(type: string): string {
