@@ -1,5 +1,6 @@
 using System;
 using ImplResourcePack.Application.KeyLimiter;
+using ImplResourcePack.Domain.Judgement;
 using ImplResourcePack.Infrastructure.Game.Input;
 using ImplResourcePack.Infrastructure.Ipc;
 using UnityEngine;
@@ -20,6 +21,7 @@ internal static class Program
       Run("applies supported keys and reports unsupported keys", AppliesSupportedSubset);
       Run("handles duplicate and stale revisions", HandlesRevisionOrdering);
       Run("disables when no requested key is supported", DisablesUnsupportedOnlyProfile);
+      Run("applies hit text visibility settings", AppliesHitTextVisibilitySettings);
       Console.WriteLine("ImplResourcePack tests: " + _passed + " passed");
       return 0;
     }
@@ -92,6 +94,17 @@ internal static class Program
     KeyLimiterService service = new();
     KeyLimiterSyncResponseDto response = service.Apply(Request(1, true, "FN"));
     True(response.Applied && !response.Enabled, "unsupported-only profile must fail open");
+  }
+
+  private static void AppliesHitTextVisibilitySettings()
+  {
+    True(HitTextVisibilityPolicy.ShouldShow(false, false, true), "Perfect should show when its setting is disabled");
+    True(!HitTextVisibilityPolicy.ShouldShow(true, false, true), "Perfect should hide when its setting is enabled");
+    True(
+      HitTextVisibilityPolicy.ShouldShow(true, false, false),
+      "non-Perfect judgments should remain visible outside record mode"
+    );
+    True(!HitTextVisibilityPolicy.ShouldShow(false, true, false), "record mode should hide every judgment");
   }
 
   private static KeyLimiterSyncRequestDto Request(long revision, bool enabled, params string[] keys) =>

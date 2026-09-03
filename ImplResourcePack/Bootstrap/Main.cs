@@ -1,5 +1,7 @@
 using System;
 using ImplResourcePack.Bootstrap;
+using ImplResourcePack.Configuration;
+using UnityEngine;
 using UnityModManagerNet;
 
 namespace ImplResourcePack;
@@ -11,6 +13,8 @@ public sealed class Main
   public UnityModManager.ModEntry ModEntry { get; }
   public string Path => ModEntry.Path;
   public string Version => ModEntry.Info.Version;
+
+  internal ImplResourcePackSettings Settings { get; private set; }
 
   internal ModRuntime Runtime { get; private set; }
 
@@ -26,7 +30,11 @@ public sealed class Main
     try
     {
       Instance = new Main(modEntry);
+      Instance.Settings =
+        UnityModManager.ModSettings.Load<ImplResourcePackSettings>(modEntry) ?? new ImplResourcePackSettings();
       modEntry.OnToggle = OnToggle;
+      modEntry.OnGUI = OnGUI;
+      modEntry.OnSaveGUI = OnSaveGUI;
       modEntry.OnUnload = OnUnload;
       Instance.Enable();
       return true;
@@ -60,7 +68,10 @@ public sealed class Main
       if (value)
         Instance.Enable();
       else
+      {
         Instance.Disable();
+        Instance.Settings?.Save(modEntry);
+      }
       return true;
     }
     catch (Exception exception)
@@ -70,10 +81,44 @@ public sealed class Main
     }
   }
 
+  private static void OnGUI(UnityModManager.ModEntry modEntry)
+  {
+    if (Instance?.Settings == null)
+      return;
+
+    bool changed = false;
+
+    GUILayout.Label("Judgment visuals");
+    bool hidePerfect = GUILayout.Toggle(Instance.Settings.HidePerfectJudgmentText, "Hide Perfect judgment text");
+    if (hidePerfect != Instance.Settings.HidePerfectJudgmentText)
+    {
+      Instance.Settings.HidePerfectJudgmentText = hidePerfect;
+      changed = true;
+    }
+
+    GUILayout.Space(12f);
+    GUILayout.Label("Recording");
+    bool recordMode = GUILayout.Toggle(Instance.Settings.RecordMode, "Record mode (hide game and ImplResourcePack UI)");
+    if (recordMode != Instance.Settings.RecordMode)
+    {
+      Instance.Settings.RecordMode = recordMode;
+      changed = true;
+    }
+
+    if (changed)
+      Instance.Runtime?.ApplySettings();
+  }
+
+  private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+  {
+    Instance?.Settings?.Save(modEntry);
+  }
+
   private static bool OnUnload(UnityModManager.ModEntry modEntry)
   {
     try
     {
+      Instance?.Settings?.Save(modEntry);
       Instance?.Disable();
       Instance = null;
       return true;

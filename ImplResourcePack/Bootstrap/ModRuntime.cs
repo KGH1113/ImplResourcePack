@@ -3,9 +3,11 @@ using HarmonyLib;
 using ImplResourcePack.Application;
 using ImplResourcePack.Application.Features;
 using ImplResourcePack.Application.KeyLimiter;
+using ImplResourcePack.Domain.Judgement;
 using ImplResourcePack.Infrastructure.Assets;
 using ImplResourcePack.Infrastructure.Game.Bpm;
 using ImplResourcePack.Infrastructure.Game.Judgement;
+using ImplResourcePack.Infrastructure.Game.Recording;
 using ImplResourcePack.Infrastructure.Game.Status;
 using ImplResourcePack.Infrastructure.Ipc;
 using ImplResourcePack.Presentation.Overlay.Bpm;
@@ -30,12 +32,14 @@ internal sealed class ModRuntime : IDisposable
   private Harmony _harmony;
   private KeyLimiterService _keyLimiter;
   private KeyLimiterIpcFeature _keyLimiterIpc;
+  private RecordingModeController _recordingMode;
   private bool _sceneHooked;
   private bool _initialized;
   private bool _disposed;
 
   internal KeyLimiterService KeyLimiter => _keyLimiter;
   public bool OverlaysAvailable => _coordinator != null;
+  public bool IsRecording => _recordingMode?.IsActive ?? false;
 
   public ModRuntime(Main main)
   {
@@ -57,6 +61,9 @@ internal sealed class ModRuntime : IDisposable
 
       _harmony = new Harmony(HarmonyId);
       _harmony.PatchAll(typeof(Main).Assembly);
+      _recordingMode = new RecordingModeController();
+      SceneManager.sceneUnloaded += OnSceneUnloaded;
+      _sceneHooked = true;
       WarnIfKeyboardChatterBlockerIsLoaded();
 
       _fontBundleLoader = new FontBundleLoader(_main);
@@ -65,6 +72,7 @@ internal sealed class ModRuntime : IDisposable
         _fontBundleLoader.Dispose();
         _fontBundleLoader = null;
         _initialized = true;
+        ApplySettings();
         return true;
       }
 
@@ -89,13 +97,8 @@ internal sealed class ModRuntime : IDisposable
       _timeTicker = _canvasHost.Root.AddComponent<StatusTimeTicker>();
       _timeTicker.Initialize(OnTimeTick);
 
-      SceneManager.sceneUnloaded += OnSceneUnloaded;
-      _sceneHooked = true;
-
       _initialized = true;
-
-      if (IsGameplayActive())
-        ShowGameplay();
+      ApplySettings();
 
       return true;
     }
@@ -114,6 +117,12 @@ internal sealed class ModRuntime : IDisposable
       {
         if (!_initialized || !OverlaysAvailable)
           return;
+        if (IsRecording)
+        {
+          HideCore();
+          _recordingMode.ReapplyCurrentScene();
+          return;
+        }
         if (scrController.coopMode)
         {
           HideCore();
@@ -130,6 +139,42 @@ internal sealed class ModRuntime : IDisposable
   public void HideGameplay()
   {
     Execute("Hide overlay", HideCore);
+  }
+
+  public void ApplySettings()
+  {
+    Execute(
+      "Apply visual settings",
+      () =>
+      {
+        if (!_initialized)
+          return;
+
+        _recordingMode?.Apply(_main.Settings.RecordMode);
+        if (IsRecording)
+        {
+          HideCore();
+          return;
+        }
+
+        if (IsGameplayActive())
+          ShowGameplay();
+      }
+    );
+  }
+
+  public bool ShouldShowHitText(HitMargin hitMargin)
+  {
+    return HitTextVisibilityPolicy.ShouldShow(
+      _main.Settings.HidePerfectJudgmentText,
+      IsRecording,
+      hitMargin == HitMargin.Perfect
+    );
+  }
+
+  public void ReapplyRecordingUi()
+  {
+    Execute("Reapply recording UI", () => _recordingMode?.ReapplyCurrentScene());
   }
 
   public void OnHit(scrMarginTracker tracker, HitMargin hit)
@@ -185,6 +230,9 @@ internal sealed class ModRuntime : IDisposable
     _keyLimiter?.Clear();
     _keyLimiter = null;
 
+    _recordingMode?.Dispose();
+    _recordingMode = null;
+
     if (_sceneHooked)
     {
       SceneManager.sceneUnloaded -= OnSceneUnloaded;
@@ -219,6 +267,7 @@ internal sealed class ModRuntime : IDisposable
 
   private void OnSceneUnloaded(Scene scene)
   {
+    _recordingMode?.ForgetDestroyedSceneObjects();
     HideGameplay();
   }
 
@@ -256,11 +305,7 @@ internal sealed class ModRuntime : IDisposable
   {
     foreach (System.Reflection.Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
     {
-      if (!string.Equals(
-          assembly.GetName().Name,
-          "KeyboardChatterBlocker",
-          StringComparison.OrdinalIgnoreCase
-        ))
+      if (!string.Equals(assembly.GetName().Name, "KeyboardChatterBlocker", StringComparison.OrdinalIgnoreCase))
         continue;
 
       _main.LogWarning(
