@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ImplDmNote",
+  "version": "0.1.0",
+  "identifier": "io.github.kgh1113.impldmnote",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3400",
+    "frontendDist": "../dist/renderer"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "ImplDmNote - Settings",
+        "width": 902,
+        "height": 488,
+        "resizable": false,
+        "maximizable": false,
+        "fullscreen": false,
+        "center": false,
+        "transparent": false,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 12,
+          "y": 18
+        },
+        "shadow": true,
+        "url": "main/index.html",
+        "visible": false,
+        "backgroundColor": "#1A191E"
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$APPDATA/fonts/**",
+          "$APPDATA/images/**"
+        ]
+      },
+      "capabilities": [
+        "main"
+      ]
+    },
+    "withGlobalTauri": true
+  }
+}

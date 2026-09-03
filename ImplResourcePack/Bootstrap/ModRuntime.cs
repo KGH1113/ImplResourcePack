@@ -2,10 +2,12 @@ using System;
 using HarmonyLib;
 using ImplResourcePack.Application;
 using ImplResourcePack.Application.Features;
+using ImplResourcePack.Application.KeyLimiter;
 using ImplResourcePack.Infrastructure.Assets;
 using ImplResourcePack.Infrastructure.Game.Bpm;
 using ImplResourcePack.Infrastructure.Game.Judgement;
 using ImplResourcePack.Infrastructure.Game.Status;
+using ImplResourcePack.Infrastructure.Ipc;
 using ImplResourcePack.Presentation.Overlay.Bpm;
 using ImplResourcePack.Presentation.Overlay.Combo;
 using ImplResourcePack.Presentation.Overlay.Judgement;
@@ -26,9 +28,14 @@ internal sealed class ModRuntime : IDisposable
   private OverlayCoordinator _coordinator;
   private StatusTimeTicker _timeTicker;
   private Harmony _harmony;
+  private KeyLimiterService _keyLimiter;
+  private KeyLimiterIpcFeature _keyLimiterIpc;
   private bool _sceneHooked;
   private bool _initialized;
   private bool _disposed;
+
+  internal KeyLimiterService KeyLimiter => _keyLimiter;
+  public bool OverlaysAvailable => _coordinator != null;
 
   public ModRuntime(Main main)
   {
@@ -44,9 +51,22 @@ internal sealed class ModRuntime : IDisposable
 
     try
     {
+      _keyLimiter = new KeyLimiterService();
+      _keyLimiterIpc = new KeyLimiterIpcFeature(_keyLimiter);
+      _keyLimiterIpc.Enable();
+
+      _harmony = new Harmony(HarmonyId);
+      _harmony.PatchAll(typeof(Main).Assembly);
+      WarnIfKeyboardChatterBlockerIsLoaded();
+
       _fontBundleLoader = new FontBundleLoader(_main);
       if (!_fontBundleLoader.Load())
-        return false;
+      {
+        _fontBundleLoader.Dispose();
+        _fontBundleLoader = null;
+        _initialized = true;
+        return true;
+      }
 
       _canvasHost = new OverlayCanvasHost();
       _materialFactory = new OverlayMaterialFactory(_fontBundleLoader.FontAsset);
@@ -72,8 +92,6 @@ internal sealed class ModRuntime : IDisposable
       SceneManager.sceneUnloaded += OnSceneUnloaded;
       _sceneHooked = true;
 
-      _harmony = new Harmony(HarmonyId);
-      _harmony.PatchAll(typeof(Main).Assembly);
       _initialized = true;
 
       if (IsGameplayActive())
@@ -94,7 +112,7 @@ internal sealed class ModRuntime : IDisposable
       "Show overlay",
       () =>
       {
-        if (!_initialized)
+        if (!_initialized || !OverlaysAvailable)
           return;
         if (scrController.coopMode)
         {
@@ -162,6 +180,11 @@ internal sealed class ModRuntime : IDisposable
     _disposed = true;
     _initialized = false;
 
+    _keyLimiterIpc?.Dispose();
+    _keyLimiterIpc = null;
+    _keyLimiter?.Clear();
+    _keyLimiter = null;
+
     if (_sceneHooked)
     {
       SceneManager.sceneUnloaded -= OnSceneUnloaded;
@@ -227,5 +250,23 @@ internal sealed class ModRuntime : IDisposable
       && !ADOBase.controller.paused
       && ADOBase.conductor != null
       && ADOBase.conductor.isGameWorld;
+  }
+
+  private void WarnIfKeyboardChatterBlockerIsLoaded()
+  {
+    foreach (System.Reflection.Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+    {
+      if (!string.Equals(
+          assembly.GetName().Name,
+          "KeyboardChatterBlocker",
+          StringComparison.OrdinalIgnoreCase
+        ))
+        continue;
+
+      _main.LogWarning(
+        "[KeyLimiter] KeyboardChatterBlocker is loaded. Disable its key limiter to avoid combined filtering."
+      );
+      return;
+    }
   }
 }

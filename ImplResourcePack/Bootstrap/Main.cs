@@ -94,7 +94,12 @@ public sealed class Main
     {
       Runtime = new ModRuntime(this);
       if (Runtime.Initialize())
-        Log("Enabled with Judgement, Status, and BPM overlays.");
+      {
+        if (Runtime.OverlaysAvailable)
+          Log("Enabled with IPC key limiter and overlays.");
+        else
+          LogWarning("Enabled IPC key limiter without overlays because their font could not be loaded.");
+      }
       else
       {
         Runtime.Dispose();

@@ -3,7 +3,7 @@
   "DisplayName": "Impl Resource Pack",
   "Author": "impl",
   "Version": "0.1.0",
-  "AssemblyName": "ImplResourcePack.dll",
-  "EntryMethod": "ImplResourcePack.Main.Load"
+  "AssemblyName": "AdofaiIpc.DependencyShim.dll",
+  "EntryMethod": "AdofaiIpc.DependencyShim.DependencyShim.Load",
+  "LoadAfter": ["AdofaiIpc"]
 }
-

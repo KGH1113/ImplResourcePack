@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="AdofaiIpc">
+      <HintPath>$(AdofaiIpcDll)</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityModManager">
       <HintPath>$(UnityModManagerDll)</HintPath>
       <Private>false</Private>
@@ -34,6 +38,10 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(AdofaiManaged)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(AdofaiManaged)/UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
@@ -66,6 +74,10 @@
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(AdofaiManaged)/Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SkyHook.Unity">
+      <HintPath>$(AdofaiManaged)/SkyHook.Unity.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

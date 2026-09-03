@@ -13,5 +13,5 @@ DOTNET_ROOT="$DOTNET_ROOT" DOTNET_ROOT_ARM64="$DOTNET_ROOT_ARM64" \
     -p:OutputPath="$IMPL_RESOURCEPACK_BUILD_OUTPUT/" \
     -p:AdofaiManaged="$ADOFAI_MANAGED" \
     -p:UnityModManagerDll="$UNITY_MOD_MANAGER_DLL" \
-    -p:HarmonyDll="$HARMONY_DLL"
-
+    -p:HarmonyDll="$HARMONY_DLL" \
+    -p:AdofaiIpcDll="$ADOFAI_IPC_DLL"

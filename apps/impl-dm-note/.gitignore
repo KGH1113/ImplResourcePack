@@ -1,0 +1,34 @@
+node_modules
+dist
+
+.roo
+copilot-instructions.md
+src-tauri/target
+.DS_Store
+.claude/settings.local.json
+
+# WebView2 FixedVersionRuntime (downloaded locally; keep placeholder)
+src-tauri/webview2-fixed-runtime/*
+!src-tauri/webview2-fixed-runtime/placeholder.txt
+
+.mcp.json
+mcp.json
+
+tasks/
+
+# --- C# / Visual Studio (UWP) ---
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.dbmdl
+*.jfm
+AppPackages/
+BundleArtifacts/
+*.appxupload
+*.msixupload
+*.appxbundle
+*.msixbundle
+*.pfx
+Package.StoreAssociation.xml

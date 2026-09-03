@@ -1,0 +1,805 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .icon-btn {
+    @apply w-[24px] h-[24px] flex items-center justify-center hover:bg-[#303036] rounded-[4px] transition-colors;
+  }
+  .input-field {
+    @apply text-center h-[23px] bg-[#2A2A30] rounded-[7px] border border-[#3A3943] focus:border-[#459BF8] text-[11px] text-[#D7D8DB];
+  }
+  .btn-danger {
+    @apply bg-[#3C1E1E] hover:bg-[#442222] active:bg-[#522929] rounded-[7px] text-[#E6DBDB];
+  }
+  .btn-secondary {
+    @apply bg-[#2A2A30] hover:bg-[#303036] active:bg-[#393941] rounded-[7px] text-[#D7D8DB];
+  }
+  .btn-default {
+    @apply px-[10px] h-[23px] bg-[#2A2A30] hover:bg-[#303036] active:bg-[#393941] rounded-[7px] text-[11px];
+  }
+}
+
+@font-face {
+  font-family: 'SUIT-Regular';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Regular.woff2')
+    format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  font-family: 'SUIT-Regular', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  /* background: transparent !important; */
+}
+
+* {
+  user-select: none;
+  outline: none;
+}
+
+[app-region='drag'] {
+  -webkit-app-region: drag;
+}
+
+[app-region='no-drag'] {
+  -webkit-app-region: no-drag;
+}
+
+/* 기존 CSS 그리드 배경 - SVG GridBackground 컴포넌트로 대체됨 */
+/* .grid-bg {
+  background-image: linear-gradient(
+      to right,
+      rgb(25, 25, 28) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgb(25, 25, 28) 1px, transparent 1px);
+  background-size: 5px 5px;
+} */
+
+.image-rendering {
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 라디오 버튼 스타일링 */
+input[type='radio']:checked + span {
+  border-color: #ffb400;
+}
+
+input[type='radio']:checked + span span {
+  background: #ffb400;
+  transform: scale(0.5);
+}
+
+/* 숫자 인풋 버튼 제거 */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* SettingsTab custom scrollbar */
+.settings-scroll {
+  overscroll-behavior: contain;
+}
+
+.settings-scroll::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.settings-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 0px;
+}
+
+.settings-scroll.show-scrollbar::-webkit-scrollbar-thumb,
+.settings-scroll:hover::-webkit-scrollbar-thumb {
+  background: #989ba6;
+}
+
+.settings-scroll.show-scrollbar::-webkit-scrollbar-track,
+.settings-scroll:hover::-webkit-scrollbar-track {
+  background: #24262d;
+}
+
+.settings-scroll.show-scrollbar::-webkit-scrollbar-thumb:hover,
+.settings-scroll:hover::-webkit-scrollbar-thumb:hover {
+  background: #b1b4bd;
+}
+
+.settings-scroll.show-scrollbar::-webkit-scrollbar-thumb:active,
+.settings-scroll:hover::-webkit-scrollbar-thumb:active {
+  background: #d0d3d9;
+}
+
+/* ListPopup 컨텍스트 메뉴 커스텀 스크롤바 */
+.listpopup-scroll {
+  overscroll-behavior: contain;
+}
+
+.listpopup-scroll::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+
+.listpopup-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.listpopup-scroll::-webkit-scrollbar-thumb {
+  background: #4a4d5a;
+  border-radius: 4px;
+}
+
+.listpopup-scroll:hover::-webkit-scrollbar-thumb {
+  background: #5e6170;
+}
+
+.listpopup-scroll::-webkit-scrollbar-thumb:hover {
+  background: #74778a;
+}
+
+.listpopup-scroll::-webkit-scrollbar-thumb:active {
+  background: #8b8ea0;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-fade-in {
+  animation: tooltipFadeIn 120ms ease-out;
+}
+
+@keyframes viewerTabPopupIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.viewer-tab-popup {
+  animation: viewerTabPopupIn 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.viewer-tab-popup::after {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  z-index: 0;
+  width: 8px;
+  height: 8px;
+  content: '';
+  background: #000000;
+  border-right: 1px solid #3a3943;
+  border-bottom: 1px solid #3a3943;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.viewer-tab-trigger-surface {
+  transition: transform 75ms ease-out, background-color 75ms ease-out;
+}
+
+.viewer-tab-trigger:active .viewer-tab-trigger-surface {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewer-tab-popup {
+    animation: tooltipFadeIn 100ms ease-out;
+  }
+
+  .viewer-tab-trigger-surface {
+    transition: background-color 75ms ease-out;
+  }
+
+  .viewer-tab-trigger:active .viewer-tab-trigger-surface {
+    transform: none;
+  }
+}
+
+.key-limiter-status-slot > .inline-flex {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.key-limiter-status {
+  display: inline-flex;
+  height: 30px;
+  min-width: 30px;
+  max-width: min(210px, 100%);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  background: rgba(32, 32, 37, 0.82);
+  padding: 0 11px;
+  color: #a9acb7;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  backdrop-filter: blur(12px) saturate(135%);
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 100ms ease-out;
+}
+
+.key-limiter-status:hover,
+.key-limiter-status:focus-visible {
+  background: rgba(43, 43, 49, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.key-limiter-status:focus-visible {
+  box-shadow: 0 0 0 2px rgba(69, 155, 248, 0.38);
+}
+
+.key-limiter-status:active {
+  transform: scale(0.97);
+}
+
+.key-limiter-status__live,
+.key-limiter-status-detail__heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.key-limiter-status__live {
+  min-width: 0;
+}
+
+.key-limiter-status__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key-limiter-status--progress,
+.key-limiter-status-detail__heading--progress {
+  color: #75b8ff;
+}
+
+.key-limiter-status--success,
+.key-limiter-status-detail__heading--success {
+  color: #70d99b;
+}
+
+.key-limiter-status--warning,
+.key-limiter-status-detail__heading--warning {
+  color: #e7b968;
+}
+
+.key-limiter-status--error,
+.key-limiter-status-detail__heading--error {
+  color: #f17e86;
+}
+
+.key-limiter-status-glyph {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.key-limiter-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.key-limiter-status-glyph--progress {
+  animation: keyLimiterSpin 900ms linear infinite;
+}
+
+.key-limiter-status-glyph--complete {
+  animation: keyLimiterMaterialize 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.key-limiter-status-detail {
+  width: 244px;
+  padding: 8px 7px 7px;
+  white-space: normal;
+}
+
+.key-limiter-status-detail__heading {
+  min-height: 22px;
+  padding: 0 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.key-limiter-status-detail__body {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 8px;
+}
+
+.key-limiter-status-detail__body > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.key-limiter-status-detail__body span,
+.key-limiter-status-detail__empty {
+  color: #8f929d;
+  font-size: 11px;
+}
+
+.key-limiter-status-detail__body strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #e4e6ec;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key-limiter-status-detail__unsupported {
+  align-items: flex-start !important;
+  flex-direction: column;
+  gap: 4px !important;
+}
+
+.key-limiter-status-detail__unsupported strong {
+  width: 100%;
+  color: #e7b968;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.key-limiter-status-detail__empty,
+.key-limiter-status-detail__error {
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 8px 2px 1px;
+  line-height: 1.45;
+}
+
+.key-limiter-status-detail__error {
+  color: #f17e86;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+@keyframes keyLimiterSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes keyLimiterMaterialize {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .key-limiter-status {
+    width: 30px;
+    padding: 0;
+  }
+
+  .key-limiter-status__label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key-limiter-status,
+  .key-limiter-status-glyph--progress,
+  .key-limiter-status-glyph--complete {
+    animation: none;
+    transition: color 120ms linear, background-color 120ms linear;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .key-limiter-status {
+    background: #25252b;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .key-limiter-status {
+    background: #17171b;
+    border-color: currentColor;
+  }
+}
+
+@keyframes modalScale {
+  from {
+    transform: scale(0.95);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-modal-scale {
+  animation: modalScale 120ms ease-out forwards;
+}
+
+@keyframes modalFade {
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-modal-fade {
+  animation: modalFade 60ms ease-out forwards;
+}
+
+/* ColorPicker */
+.rcp-saturation {
+  border-radius: 7px !important;
+  cursor: pointer !important;
+  box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.25) !important;
+}
+
+.rcp-saturation-cursor {
+  height: 10px !important;
+  width: 10px !important;
+  transform: translate(-50%, -50%) !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.7) !important;
+  border: 2px solid white !important;
+  border-radius: 100% !important;
+}
+
+.rcp-hue {
+  border-radius: 7px !important;
+  cursor: pointer !important;
+  height: 10px !important;
+  box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.25) !important;
+}
+
+.rcp-hue-cursor {
+  height: 10px !important;
+  width: 10px !important;
+  transform: translate(-50%, 0%) !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.7) !important;
+  border: 2px solid white !important;
+  border-radius: 100% !important;
+}
+
+.rcp-alpha {
+  border-radius: 7px !important;
+  cursor: pointer !important;
+  height: 10px !important;
+  box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.25) !important;
+}
+
+.rcp-alpha-cursor {
+  height: 10px !important;
+  width: 10px !important;
+  transform: translate(-50%, 0%) !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.7) !important;
+  border: 2px solid white !important;
+  border-radius: 100% !important;
+}
+
+.counter {
+  position: relative;
+  display: inline-block;
+  pointer-events: none;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+  padding-inline: var(--dmn-counter-safe-inline, 1px);
+  white-space: nowrap;
+  color: var(--counter-color, var(--counter-color-default, #ffffff));
+}
+
+.counter::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  -webkit-text-stroke-width: var(
+    --counter-stroke-width,
+    var(--counter-stroke-width-default, 0px)
+  );
+  -webkit-text-stroke-color: var(
+    --counter-stroke-color,
+    var(--counter-stroke-color-default, transparent)
+  );
+  color: transparent;
+}
+
+.text-safe-inline {
+  box-sizing: border-box;
+  padding-inline: var(--dmn-text-safe-inline, 2px);
+}
+
+/* Modal scrollbar */
+.modal-content-scroll {
+  overscroll-behavior: contain;
+  /* 네이티브 동작 유지 */
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  contain: paint;
+}
+
+.modal-content-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+
+.modal-content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.modal-content-scroll::-webkit-scrollbar-thumb {
+  background: #3a3943;
+  border-radius: 2px;
+}
+
+.modal-content-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4a4953;
+}
+
+.modal-content-scroll::-webkit-scrollbar-thumb:active {
+  background: #5a5963;
+}
+
+/* WebFontInputModal code editor */
+.webfont-cm-editor {
+  height: 100%;
+}
+
+.webfont-cm-editor .cm-editor {
+  height: 100%;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+.webfont-cm-editor .cm-scroller,
+.webfont-cm-editor .cm-content,
+.webfont-cm-editor .cm-line {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.webfont-cm-editor .cm-scroller,
+.webfont-cm-editor .cm-content,
+.webfont-cm-editor .cm-gutterElement {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  letter-spacing: 0;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+}
+
+.webfont-cm-editor .cm-gutterElement {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.webfont-cm-editor .cm-scroller {
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.webfont-cm-editor .cm-content {
+  min-height: 100%;
+  padding: 8px 12px 8px 14px;
+  tab-size: 2;
+  caret-color: #d4d4d4;
+}
+
+.webfont-cm-editor .cm-line {
+  padding: 0;
+}
+
+.webfont-cm-editor .cm-gutters {
+  background: #252526;
+  color: #858585;
+  border-right: 1px solid #33343d;
+}
+
+.webfont-cm-editor .cm-lineNumbers .cm-gutterElement {
+  width: 52px;
+  min-width: 52px;
+  box-sizing: border-box;
+  padding: 0 12px 0 0;
+  text-align: right;
+}
+
+.webfont-cm-editor .cm-activeLine {
+  background: #ffffff10;
+}
+
+.webfont-cm-editor .cm-activeLineGutter {
+  color: #c6c6c6;
+  background: #252526;
+}
+
+.webfont-cm-editor .cm-content ::selection {
+  background: #5b7fae;
+}
+
+.webfont-cm-editor .cm-content ::-moz-selection {
+  background: #5b7fae;
+}
+
+.webfont-cm-editor .cm-cursor,
+.webfont-cm-editor .cm-dropCursor {
+  border-left-color: #d4d4d4;
+}
+
+.webfont-cm-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.webfont-cm-editor .cm-placeholder {
+  color: #6f6e7a;
+  white-space: pre;
+}
+
+.webfont-cm-editor .cm-scroller::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  background: transparent;
+}
+
+.webfont-cm-editor .cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.webfont-cm-editor .cm-scroller::-webkit-scrollbar-thumb {
+  background: #3a3943;
+  border-radius: 2px;
+}
+
+.webfont-cm-editor .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: #4a4953;
+}
+
+.webfont-cm-editor .cm-scroller::-webkit-scrollbar-thumb:active {
+  background: #5a5963;
+}
+
+/* PropertiesPanel 오버레이 스크롤바 (레이아웃 수축 방지) */
+.properties-panel-overlay-scroll {
+  position: relative;
+  overflow: hidden;
+}
+
+.properties-panel-overlay-viewport {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.properties-panel-overlay-viewport::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.properties-panel-overlay-bar {
+  position: absolute;
+  top: 0;
+  right: 0px;
+  bottom: 0;
+  width: 4px;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+
+.properties-panel-overlay-scroll:hover .properties-panel-overlay-bar {
+  opacity: 1;
+}
+
+.properties-panel-overlay-thumb {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #3a3943;
+  border-radius: 2px;
+}
+
+.properties-panel-overlay-scroll:hover .properties-panel-overlay-thumb {
+  background: #4a4953;
+}
+
+.properties-panel-overlay-scroll:active .properties-panel-overlay-thumb {
+  background: #5a5963;
+}
+
+/* 설정 스크롤 - 호버 시에만 표시 */
+.settings-content-scroll {
+  overscroll-behavior: contain;
+}
+
+.settings-content-scroll::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+
+.settings-content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.settings-content-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.settings-content-scroll.show-scrollbar::-webkit-scrollbar-thumb {
+  background: #3a3943;
+}
+
+.settings-content-scroll.show-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4a4953;
+}
+
+.settings-content-scroll.show-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #5a5963;
+}
+
+body.dmn-custom-cursor,
+body.dmn-custom-cursor * {
+  cursor: none !important;
+}
+
+/* 
+ * 드래그/리사이즈 중 애니메이션 비활성화
+ * 커스텀 CSS에서 transition이나 animation이 적용된 경우,
+ * 메인 창 그리드에서 키/플러그인 요소를 드래그하거나 크기 조절할 때
+ * 애니메이션이 적용되어 흐물흐물하게 움직이는 것을 방지
+ */
+[data-editing='true'],
+[data-editing='true'] * {
+  transition: none !important;
+  animation: none !important;
+}

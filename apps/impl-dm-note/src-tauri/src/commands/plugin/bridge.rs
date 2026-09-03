@@ -1,0 +1,84 @@
+use serde_json::Value;
+use tauri::{AppHandle, Emitter, Manager, State};
+
+use crate::errors::{CmdResult, CommandError};
+use crate::state::AppState;
+
+/// 플러그인 간 윈도우 브릿지 메시지 전송
+/// 모든 윈도우에 브로드캐스트
+#[tauri::command]
+pub fn plugin_bridge_send(
+    app: AppHandle,
+    message_type: String,
+    data: Option<Value>,
+) -> CmdResult<()> {
+    log::debug!(
+        "[IPC] plugin_bridge_send: type={}, data_size={}",
+        message_type,
+        data.as_ref().map(|d| d.to_string().len()).unwrap_or(0)
+    );
+
+    let payload = serde_json::json!({
+        "type": message_type,
+        "data": data,
+    });
+
+    app.emit("plugin-bridge:message", payload)?;
+
+    Ok(())
+}
+
+/// 특정 윈도우에만 메시지 전송
+#[tauri::command]
+pub fn plugin_bridge_send_to(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    target: String,
+    message_type: String,
+    data: Option<Value>,
+) -> CmdResult<()> {
+    log::debug!(
+        "[IPC] plugin_bridge_send_to: target={}, type={}, data_size={}",
+        target,
+        message_type,
+        data.as_ref().map(|d| d.to_string().len()).unwrap_or(0)
+    );
+
+    let payload = serde_json::json!({
+        "type": message_type,
+        "data": data,
+    });
+
+    let window_labels: &[&str] = match target.as_str() {
+        "main" => &["main"],
+        "overlay" => &["hand-overlay", "foot-overlay"],
+        _ => {
+            return Err(CommandError::msg(format!(
+                "Unknown target window: {}",
+                target
+            )))
+        }
+    };
+
+    let mut delivered = false;
+    for window_label in window_labels {
+        if let Some(window) = app.get_webview_window(window_label) {
+            window.emit("plugin-bridge:message", payload.clone())?;
+            delivered = true;
+        }
+    }
+    if delivered {
+        Ok(())
+    } else if target == "overlay" && state.is_obs_mode_active() {
+        // OBS 모드에서 overlay가 destroy된 상태 — WS 클라이언트로 직접 포워딩
+        state
+            .obs_bridge
+            .broadcast_tauri_event("plugin-bridge:message".to_string(), payload);
+        Ok(())
+    } else {
+        Err(CommandError::msg(format!(
+            "Window target '{}' not found",
+            target
+        )))
+    }
+}
