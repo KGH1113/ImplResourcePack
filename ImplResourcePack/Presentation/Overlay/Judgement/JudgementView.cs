@@ -11,6 +11,8 @@ namespace ImplResourcePack.Presentation.Overlay.Judgement;
 
 internal sealed class JudgementView : IOverlayView<JudgementSnapshot>
 {
+  private const string PerfectColorHex = "60FF4E";
+
   private readonly StringBuilder _builder = new(256);
   private GameObject _root;
   private TextMeshProUGUI _text;
@@ -47,6 +49,7 @@ internal sealed class JudgementView : IOverlayView<JudgementSnapshot>
     if (_text == null)
       return;
 
+    string xPerfectColorHex = GetXPerfectColorHex();
     _builder.Clear();
     _builder
       .Append(snapshot.FailOverload)
@@ -56,11 +59,17 @@ internal sealed class JudgementView : IOverlayView<JudgementSnapshot>
       .Append(snapshot.VeryEarly)
       .Append("</color> <color=#A0FF4E>")
       .Append(snapshot.EarlyPerfect)
-      .Append("</color> <color=#60FF4E>")
+      .Append("</color> <color=#")
+      .Append(PerfectColorHex)
+      .Append(">")
       .Append(snapshot.PerfectMinus)
-      .Append("</color> <color=#60FF4E>")
+      .Append("</color> <color=#")
+      .Append(xPerfectColorHex)
+      .Append(">")
       .Append(snapshot.XPerfectAndAuto)
-      .Append("</color> <color=#60FF4E>")
+      .Append("</color> <color=#")
+      .Append(PerfectColorHex)
+      .Append(">")
       .Append(snapshot.PerfectPlus)
       .Append("</color> <color=#A0FF4E>")
       .Append(snapshot.LatePerfect)
@@ -71,6 +80,15 @@ internal sealed class JudgementView : IOverlayView<JudgementSnapshot>
       .Append("</color> ")
       .Append(snapshot.FailMiss);
     _text.text = _builder.ToString();
+  }
+
+  private static string GetXPerfectColorHex()
+  {
+    if (RDC.data == null)
+      return PerfectColorHex;
+
+    ColourSchemeHitMargin colors = RDC.hitMarginColoursBySettings;
+    return colors != null ? OverlayTheme.ColorToHex(colors.colourXPerfect) : PerfectColorHex;
   }
 
   public void Dispose()
