@@ -3,6 +3,7 @@ using ImplResourcePack.Application.KeyLimiter;
 using ImplResourcePack.Domain.Judgement;
 using ImplResourcePack.Infrastructure.Game.Input;
 using ImplResourcePack.Infrastructure.Ipc;
+using ImplResourcePack.Presentation.Overlay.Combo;
 using UnityEngine;
 
 namespace ImplResourcePack.Tests;
@@ -23,6 +24,7 @@ internal static class Program
       Run("handles duplicate and stale revisions", HandlesRevisionOrdering);
       Run("disables when no requested key is supported", DisablesUnsupportedOnlyProfile);
       Run("applies hit text visibility settings", AppliesHitTextVisibilitySettings);
+      Run("normalizes song title size tags", NormalizesSongTitleSizeTags);
       Run("trackpad gesture ownership, zoom and native ABI", TrackpadTests.Run);
       Console.WriteLine("ImplResourcePack tests: " + _passed + " passed");
       return 0;
@@ -89,8 +91,7 @@ internal static class Program
       KeyLimiterService service = new();
       service.Apply(Request(1, true, name));
       True(service.Current.Allows(KeyCode.Backslash), "backslash should be allowed");
-      if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-        System.Runtime.InteropServices.OSPlatform.OSX))
+      if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
       {
         True(service.Current.AllowsAsync(0x31), "ANSI backslash should be allowed");
         True(service.Current.AllowsAsync(0x64), "ISO backslash should be allowed");
@@ -127,6 +128,24 @@ internal static class Program
       "non-Perfect judgments should remain visible outside record mode"
     );
     True(!HitTextVisibilityPolicy.ShouldShow(false, true, false), "record mode should hide every judgment");
+  }
+
+  private static void NormalizesSongTitleSizeTags()
+  {
+    Equal(
+      "<size=150%>large</size> <size=50%>small</size>",
+      SongTitleMarkupNormalizer.Normalize("<size=150>large</size> <size=50>small</size>", 100)
+    );
+    Equal(
+      "<size=125%>larger</size> <size=75%>smaller</size>",
+      SongTitleMarkupNormalizer.Normalize("<size=+25>larger</size> <size=-25>smaller</size>", 100)
+    );
+    Equal(
+      "<size=60%>percent</size> <size=1.2em>em</size>",
+      SongTitleMarkupNormalizer.Normalize("<size=60%>percent</size> <size=1.2em>em</size>", 100)
+    );
+    Equal("<size=145.833333%>scaled</size>", SongTitleMarkupNormalizer.Normalize("<size=70>scaled</size>", 48));
+    Equal("plain", SongTitleMarkupNormalizer.Normalize("plain", 0));
   }
 
   private static KeyLimiterSyncRequestDto Request(long revision, bool enabled, params string[] keys) =>

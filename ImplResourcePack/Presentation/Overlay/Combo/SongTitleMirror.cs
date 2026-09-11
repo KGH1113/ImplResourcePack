@@ -9,6 +9,7 @@ internal sealed class SongTitleMirror : MonoBehaviour
   private TextMeshProUGUI _target;
   private Text _source;
   private string _lastText;
+  private int _lastSourceFontSize;
   private bool _sourceWasEnabled;
 
   public void Initialize(TextMeshProUGUI target)
@@ -55,6 +56,7 @@ internal sealed class SongTitleMirror : MonoBehaviour
       }
 
       _lastText = null;
+      _lastSourceFontSize = 0;
     }
     else if (_source != null && _source.enabled)
     {
@@ -65,11 +67,13 @@ internal sealed class SongTitleMirror : MonoBehaviour
       return;
 
     string text = _source != null ? _source.text : string.Empty;
-    if (_lastText == text)
+    int sourceFontSize = _source != null ? _source.fontSize : 0;
+    if (_lastText == text && _lastSourceFontSize == sourceFontSize)
       return;
 
-    _target.text = text;
+    _target.text = SongTitleMarkupNormalizer.Normalize(text, sourceFontSize);
     _lastText = text;
+    _lastSourceFontSize = sourceFontSize;
   }
 
   private void RestoreSource()
@@ -79,5 +83,6 @@ internal sealed class SongTitleMirror : MonoBehaviour
 
     _source = null;
     _lastText = null;
+    _lastSourceFontSize = 0;
   }
 }
