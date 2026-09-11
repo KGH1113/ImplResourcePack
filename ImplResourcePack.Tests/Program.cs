@@ -26,6 +26,7 @@ internal static class Program
       Run("disables when no requested key is supported", DisablesUnsupportedOnlyProfile);
       Run("applies hit text visibility settings", AppliesHitTextVisibilitySettings);
       Run("classifies X-Perfect hit margins", ClassifiesXPerfectHitMargins);
+      Run("represents X-Perfect counts separately", RepresentsXPerfectCountsSeparately);
       Run("normalizes song title size tags", NormalizesSongTitleSizeTags);
       Run("trackpad gesture ownership, zoom and native ABI", TrackpadTests.Run);
       Console.WriteLine("ImplResourcePack tests: " + _passed + " passed");
@@ -144,6 +145,15 @@ internal static class Program
     True(HitMarginPolicy.ContinuesCombo(HitMargin.Auto), "Auto should continue the combo");
     True(!HitMarginPolicy.IsPerfect(HitMargin.Multipress), "Multipress should remain distinct");
     True(!HitMarginPolicy.ContinuesCombo(HitMargin.EarlyPerfect), "EarlyPerfect should reset the combo");
+  }
+
+  private static void RepresentsXPerfectCountsSeparately()
+  {
+    JudgementSnapshot snapshot = new(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+
+    Equal(5, snapshot.PerfectMinus);
+    Equal(6, snapshot.XPerfectAndAuto);
+    Equal(7, snapshot.PerfectPlus);
   }
 
   private static void NormalizesSongTitleSizeTags()

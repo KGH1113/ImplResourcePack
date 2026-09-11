@@ -6,7 +6,9 @@ internal readonly struct JudgementSnapshot
   public int TooEarly { get; }
   public int VeryEarly { get; }
   public int EarlyPerfect { get; }
-  public int PerfectAndAuto { get; }
+  public int PerfectMinus { get; }
+  public int XPerfectAndAuto { get; }
+  public int PerfectPlus { get; }
   public int LatePerfect { get; }
   public int VeryLate { get; }
   public int TooLate { get; }
@@ -17,7 +19,9 @@ internal readonly struct JudgementSnapshot
     int tooEarly,
     int veryEarly,
     int earlyPerfect,
-    int perfectAndAuto,
+    int perfectMinus,
+    int xPerfectAndAuto,
+    int perfectPlus,
     int latePerfect,
     int veryLate,
     int tooLate,
@@ -28,7 +32,9 @@ internal readonly struct JudgementSnapshot
     TooEarly = tooEarly;
     VeryEarly = veryEarly;
     EarlyPerfect = earlyPerfect;
-    PerfectAndAuto = perfectAndAuto;
+    PerfectMinus = perfectMinus;
+    XPerfectAndAuto = xPerfectAndAuto;
+    PerfectPlus = perfectPlus;
     LatePerfect = latePerfect;
     VeryLate = veryLate;
     TooLate = tooLate;

@@ -26,10 +26,9 @@ internal sealed class JudgementReader
       Count(hits, HitMargin.TooEarly),
       Count(hits, HitMargin.VeryEarly),
       Count(hits, HitMargin.EarlyPerfect),
-      Count(hits, HitMargin.PerfectMinus)
-        + Count(hits, HitMargin.XPerfect)
-        + Count(hits, HitMargin.PerfectPlus)
-        + Count(hits, HitMargin.Auto),
+      Count(hits, HitMargin.PerfectMinus),
+      Count(hits, HitMargin.XPerfect) + Count(hits, HitMargin.Auto),
+      Count(hits, HitMargin.PerfectPlus),
       Count(hits, HitMargin.LatePerfect),
       Count(hits, HitMargin.VeryLate),
       Count(hits, HitMargin.TooLate),
