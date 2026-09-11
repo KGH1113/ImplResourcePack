@@ -1,4 +1,5 @@
 using ImplResourcePack.Domain.Combo;
+using ImplResourcePack.Infrastructure.Game.Judgement;
 
 namespace ImplResourcePack.Application.Features;
 
@@ -26,7 +27,8 @@ internal sealed class ComboFeature : IOverlayFeature
 
   public void RegisterHit(HitMargin hit)
   {
-    if (hit == HitMargin.Perfect || hit == HitMargin.Auto)
+    bool continuesCombo = HitMarginPolicy.ContinuesCombo(hit);
+    if (continuesCombo)
     {
       if (_count < int.MaxValue)
         _count++;
@@ -36,7 +38,7 @@ internal sealed class ComboFeature : IOverlayFeature
       _count = 0;
     }
 
-    Render(hit == HitMargin.Perfect || hit == HitMargin.Auto);
+    Render(continuesCombo);
   }
 
   public void Reset()

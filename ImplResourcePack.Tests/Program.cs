@@ -2,6 +2,7 @@ using System;
 using ImplResourcePack.Application.KeyLimiter;
 using ImplResourcePack.Domain.Judgement;
 using ImplResourcePack.Infrastructure.Game.Input;
+using ImplResourcePack.Infrastructure.Game.Judgement;
 using ImplResourcePack.Infrastructure.Ipc;
 using ImplResourcePack.Presentation.Overlay.Combo;
 using UnityEngine;
@@ -24,6 +25,7 @@ internal static class Program
       Run("handles duplicate and stale revisions", HandlesRevisionOrdering);
       Run("disables when no requested key is supported", DisablesUnsupportedOnlyProfile);
       Run("applies hit text visibility settings", AppliesHitTextVisibilitySettings);
+      Run("classifies X-Perfect hit margins", ClassifiesXPerfectHitMargins);
       Run("normalizes song title size tags", NormalizesSongTitleSizeTags);
       Run("trackpad gesture ownership, zoom and native ABI", TrackpadTests.Run);
       Console.WriteLine("ImplResourcePack tests: " + _passed + " passed");
@@ -128,6 +130,20 @@ internal static class Program
       "non-Perfect judgments should remain visible outside record mode"
     );
     True(!HitTextVisibilityPolicy.ShouldShow(false, true, false), "record mode should hide every judgment");
+  }
+
+  private static void ClassifiesXPerfectHitMargins()
+  {
+    foreach (HitMargin hit in new[] { HitMargin.PerfectMinus, HitMargin.XPerfect, HitMargin.PerfectPlus })
+    {
+      True(HitMarginPolicy.IsPerfect(hit), hit + " should be a perfect judgment");
+      True(HitMarginPolicy.ContinuesCombo(hit), hit + " should continue the combo");
+    }
+
+    True(!HitMarginPolicy.IsPerfect(HitMargin.Auto), "Auto should not be shown as a perfect judgment");
+    True(HitMarginPolicy.ContinuesCombo(HitMargin.Auto), "Auto should continue the combo");
+    True(!HitMarginPolicy.IsPerfect(HitMargin.Multipress), "Multipress should remain distinct");
+    True(!HitMarginPolicy.ContinuesCombo(HitMargin.EarlyPerfect), "EarlyPerfect should reset the combo");
   }
 
   private static void NormalizesSongTitleSizeTags()

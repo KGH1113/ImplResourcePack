@@ -9,6 +9,10 @@
 
   <ItemGroup>
     <ProjectReference Include="../ImplResourcePack/ImplResourcePack.csproj" />
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(AdofaiManaged)/Assembly-CSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(AdofaiManaged)/UnityEngine.CoreModule.dll</HintPath>
       <Private>true</Private>

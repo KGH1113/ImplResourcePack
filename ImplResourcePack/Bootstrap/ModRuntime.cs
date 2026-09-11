@@ -173,7 +173,7 @@ internal sealed class ModRuntime : IDisposable
     return HitTextVisibilityPolicy.ShouldShow(
       _main.Settings.HidePerfectJudgmentText,
       IsRecording,
-      hitMargin == HitMargin.Perfect
+      HitMarginPolicy.IsPerfect(hitMargin)
     );
   }
 
