@@ -24,6 +24,20 @@ internal static class DmNoteKeyMapper
 {
   private static readonly Dictionary<string, KeyCode> NamedKeys = CreateNamedKeys();
 
+  internal static void AddAsyncKeys(ResolvedLimiterKey resolved, HashSet<ushort> keys)
+  {
+    if (resolved.HasAsyncKey)
+      keys.Add(resolved.AsyncKey);
+
+    // SkyHook maps both ANSI (0x31) and ISO (0x64) HID usages to BackSlash,
+    // but its reverse lookup returns only the ANSI usage.
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && resolved.UnityKey == KeyCode.Backslash)
+    {
+      keys.Add(0x31);
+      keys.Add(0x64);
+    }
+  }
+
   public static bool TryResolve(string rawKey, out ResolvedLimiterKey resolved)
   {
     resolved = default;

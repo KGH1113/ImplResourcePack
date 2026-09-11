@@ -36,6 +36,7 @@ public sealed class Main
       modEntry.OnGUI = OnGUI;
       modEntry.OnSaveGUI = OnSaveGUI;
       modEntry.OnUnload = OnUnload;
+      modEntry.OnUpdate = (_, _) => Instance?.Runtime?.TickTrackpad();
       Instance.Enable();
       return true;
     }
@@ -103,6 +104,14 @@ public sealed class Main
     {
       Instance.Settings.RecordMode = recordMode;
       changed = true;
+    }
+
+    if (UnityEngine.Application.platform == RuntimePlatform.OSXPlayer)
+    {
+      GUILayout.Space(12f);
+      GUILayout.Label("Level editor");
+      Instance.Settings.NativeEditorTrackpad = GUILayout.Toggle(
+        Instance.Settings.NativeEditorTrackpad, "Native trackpad (two-finger pan / pinch zoom)");
     }
 
     if (changed)

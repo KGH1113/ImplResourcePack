@@ -18,10 +18,12 @@ internal static class Program
       Run("normalizes DM Note names", NormalizeNames);
       Run("maps representative keyboard, mouse, and gamepad keys", MapsRepresentativeKeys);
       Run("maps macOS modifier async keys", MapsMacModifierAsyncKeys);
+      Run("allows ANSI and ISO backslash input", AllowsBackslashInput);
       Run("applies supported keys and reports unsupported keys", AppliesSupportedSubset);
       Run("handles duplicate and stale revisions", HandlesRevisionOrdering);
       Run("disables when no requested key is supported", DisablesUnsupportedOnlyProfile);
       Run("applies hit text visibility settings", AppliesHitTextVisibilitySettings);
+      Run("trackpad gesture ownership, zoom and native ABI", TrackpadTests.Run);
       Console.WriteLine("ImplResourcePack tests: " + _passed + " passed");
       return 0;
     }
@@ -78,6 +80,26 @@ internal static class Program
     True(service.Current.Allows(KeyCode.A), "A should be allowed");
     True(!service.Current.Allows(KeyCode.B), "B should be blocked");
     True(service.Current.Allows(KeyCode.Escape), "Escape should always be allowed");
+  }
+
+  private static void AllowsBackslashInput()
+  {
+    foreach (string name in new[] { "BACKSLASH", "\\" })
+    {
+      KeyLimiterService service = new();
+      service.Apply(Request(1, true, name));
+      True(service.Current.Allows(KeyCode.Backslash), "backslash should be allowed");
+      if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+        System.Runtime.InteropServices.OSPlatform.OSX))
+      {
+        True(service.Current.AllowsAsync(0x31), "ANSI backslash should be allowed");
+        True(service.Current.AllowsAsync(0x64), "ISO backslash should be allowed");
+        True(!service.Current.AllowsAsync(0x38), "forward slash must remain blocked");
+        service.Apply(Request(2, true, "A"));
+        True(!service.Current.AllowsAsync(0x31), "removed ANSI backslash must be blocked");
+        True(!service.Current.AllowsAsync(0x64), "removed ISO backslash must be blocked");
+      }
+    }
   }
 
   private static void HandlesRevisionOrdering()

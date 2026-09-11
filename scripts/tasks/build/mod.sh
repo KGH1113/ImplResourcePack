@@ -7,6 +7,8 @@ source "$TASK_DIR/../../lib/context.sh"
 
 configuration="${1:-Debug}"
 
+bash "$TASK_DIR/trackpad.sh"
+
 DOTNET_ROOT="$DOTNET_ROOT" DOTNET_ROOT_ARM64="$DOTNET_ROOT_ARM64" \
   "$DOTNET_EXE" build "$IMPL_RESOURCEPACK_PROJECT_ROOT/ImplResourcePack/ImplResourcePack.csproj" \
     --configuration "$configuration" \

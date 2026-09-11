@@ -8,6 +8,8 @@ public sealed class ImplResourcePackSettings : UnityModManager.ModSettings
 
   public bool RecordMode;
 
+  public bool NativeEditorTrackpad = true;
+
   public override void Save(UnityModManager.ModEntry modEntry)
   {
     Save(this, modEntry);

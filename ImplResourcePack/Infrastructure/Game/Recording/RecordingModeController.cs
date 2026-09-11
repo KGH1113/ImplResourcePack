@@ -61,6 +61,7 @@ internal sealed class RecordingModeController
     {
       Hide(editor.autoImage);
       Hide(editor.buttonAuto);
+      Hide(editor.controlsTip);
       Hide(editor.editorDifficultySelector?.gameObject);
       Hide(editor.buttonNoFail?.gameObject);
     }
@@ -80,6 +81,22 @@ internal sealed class RecordingModeController
 
     foreach (scrMissIndicator indicator in Resources.FindObjectsOfTypeAll<scrMissIndicator>())
       Hide(indicator?.gameObject);
+  }
+
+  public void HideMissIndicator(scrMissIndicator indicator)
+  {
+    if (_active)
+      Hide(indicator?.gameObject);
+  }
+
+  public void HideErrorMeter()
+  {
+    if (!_active)
+      return;
+
+    scrHitErrorMeter errorMeter = scrController.instance?.errorMeter;
+    Hide(errorMeter?.gameObject);
+    Hide(errorMeter?.wrapperRectTransform?.gameObject);
   }
 
   public void ForgetDestroyedSceneObjects()

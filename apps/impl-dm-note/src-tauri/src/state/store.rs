@@ -583,3 +583,73 @@ mod viewer_tab_backup_tests {
         assert!(!backup_path.exists());
     }
 }
+
+#[cfg(test)]
+mod viewer_selection_tests {
+    use super::AppStore;
+    use crate::models::{AppStoreData, KeyViewerKind, KeyViewerTab, SelectedViewerTabs};
+    use crate::state::migration::{load_store_from_path, normalize_state};
+    use parking_lot::RwLock;
+    use tempfile::tempdir;
+
+    #[test]
+    fn viewer_selections_survive_store_updates_and_reload_in_both_orders() {
+        for foot_first in [false, true] {
+            let dir = tempdir().unwrap();
+            let mut data = AppStoreData::default();
+            data.key_viewer_tabs_migrated = true;
+            data.tabs = [
+                ("inroll", KeyViewerKind::Hand),
+                ("foot-a", KeyViewerKind::Foot),
+                ("numpad", KeyViewerKind::Hand),
+                ("foot-b", KeyViewerKind::Foot),
+            ]
+            .into_iter()
+            .map(|(id, viewer_kind)| KeyViewerTab {
+                id: id.into(),
+                name: id.into(),
+                viewer_kind,
+            })
+            .collect();
+            data.selected_key_type = "inroll".into();
+            data.selected_viewer_tabs = SelectedViewerTabs {
+                hand: "inroll".into(),
+                foot: "foot-a".into(),
+            };
+            let store = AppStore {
+                path: dir.path().join("store.json"),
+                state: RwLock::new(normalize_state(data)),
+            };
+            let mut selections = [
+                (KeyViewerKind::Hand, "numpad"),
+                (KeyViewerKind::Foot, "foot-b"),
+            ];
+            if foot_first {
+                selections.reverse();
+            }
+            for (kind, id) in selections {
+                store
+                    .update(|data| {
+                        data.selected_key_type = id.into();
+                        match kind {
+                            KeyViewerKind::Hand => data.selected_viewer_tabs.hand = id.into(),
+                            KeyViewerKind::Foot => data.selected_viewer_tabs.foot = id.into(),
+                        }
+                    })
+                    .unwrap();
+            }
+            // Settings/counter saves also normalize the whole store.
+            store.update(|data| data.note_effect = true).unwrap();
+            let current = store.snapshot();
+            assert_eq!(current.selected_viewer_tabs.hand, "numpad");
+            assert_eq!(current.selected_viewer_tabs.foot, "foot-b");
+            assert_eq!(
+                current.selected_key_type,
+                if foot_first { "numpad" } else { "foot-b" }
+            );
+            let (reloaded, _) = load_store_from_path(&store.path).unwrap();
+            assert_eq!(reloaded.selected_viewer_tabs.hand, "numpad");
+            assert_eq!(reloaded.selected_viewer_tabs.foot, "foot-b");
+        }
+    }
+}

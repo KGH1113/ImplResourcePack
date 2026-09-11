@@ -6,6 +6,7 @@ using ImplResourcePack.Application.KeyLimiter;
 using ImplResourcePack.Domain.Judgement;
 using ImplResourcePack.Infrastructure.Assets;
 using ImplResourcePack.Infrastructure.Game.Bpm;
+using ImplResourcePack.Infrastructure.Game.Editor;
 using ImplResourcePack.Infrastructure.Game.Judgement;
 using ImplResourcePack.Infrastructure.Game.Recording;
 using ImplResourcePack.Infrastructure.Game.Status;
@@ -36,6 +37,7 @@ internal sealed class ModRuntime : IDisposable
   private bool _sceneHooked;
   private bool _initialized;
   private bool _disposed;
+  private EditorTrackpadController _trackpad;
 
   internal KeyLimiterService KeyLimiter => _keyLimiter;
   public bool OverlaysAvailable => _coordinator != null;
@@ -61,6 +63,7 @@ internal sealed class ModRuntime : IDisposable
 
       _harmony = new Harmony(HarmonyId);
       _harmony.PatchAll(typeof(Main).Assembly);
+      _trackpad = EditorTrackpadController.TryCreate(_main);
       _recordingMode = new RecordingModeController();
       SceneManager.sceneUnloaded += OnSceneUnloaded;
       _sceneHooked = true;
@@ -136,6 +139,8 @@ internal sealed class ModRuntime : IDisposable
     );
   }
 
+  public void TickTrackpad() => _trackpad?.Tick();
+
   public void HideGameplay()
   {
     Execute("Hide overlay", HideCore);
@@ -175,6 +180,16 @@ internal sealed class ModRuntime : IDisposable
   public void ReapplyRecordingUi()
   {
     Execute("Reapply recording UI", () => _recordingMode?.ReapplyCurrentScene());
+  }
+
+  public void HideRecordingMissIndicator(scrMissIndicator indicator)
+  {
+    Execute("Hide recording miss indicator", () => _recordingMode?.HideMissIndicator(indicator));
+  }
+
+  public void HideRecordingErrorMeter()
+  {
+    Execute("Hide recording error meter", () => _recordingMode?.HideErrorMeter());
   }
 
   public void OnHit(scrMarginTracker tracker, HitMargin hit)
@@ -224,6 +239,9 @@ internal sealed class ModRuntime : IDisposable
 
     _disposed = true;
     _initialized = false;
+
+    _trackpad?.Dispose();
+    _trackpad = null;
 
     _keyLimiterIpc?.Dispose();
     _keyLimiterIpc = null;

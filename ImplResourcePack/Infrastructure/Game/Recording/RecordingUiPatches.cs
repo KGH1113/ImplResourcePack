@@ -12,15 +12,20 @@ internal static class RecordingUiPatchState
   {
     Main.Instance?.Runtime?.ReapplyRecordingUi();
   }
+
+  public static void HideErrorMeter()
+  {
+    Main.Instance?.Runtime?.HideRecordingErrorMeter();
+  }
 }
 
 [HarmonyPatch(typeof(scrMissIndicator), "Awake")]
 internal static class RecordingMissIndicatorPatch
 {
   [HarmonyPostfix]
-  private static void Postfix()
+  private static void Postfix(scrMissIndicator __instance)
   {
-    RecordingUiPatchState.Reapply();
+    Main.Instance?.Runtime?.HideRecordingMissIndicator(__instance);
   }
 }
 
@@ -89,7 +94,7 @@ internal static class RecordingErrorMeterVisibilityPatch
   [HarmonyPostfix]
   private static void Postfix()
   {
-    RecordingUiPatchState.Reapply();
+    RecordingUiPatchState.HideErrorMeter();
   }
 }
 
@@ -109,7 +114,7 @@ internal static class RecordingFloorUiPatch
   [HarmonyPostfix]
   private static void Postfix()
   {
-    RecordingUiPatchState.Reapply();
+    RecordingUiPatchState.HideErrorMeter();
   }
 }
 
@@ -119,6 +124,6 @@ internal static class RecordingCutsceneUiPatch
   [HarmonyPostfix]
   private static void Postfix()
   {
-    RecordingUiPatchState.Reapply();
+    RecordingUiPatchState.HideErrorMeter();
   }
 }

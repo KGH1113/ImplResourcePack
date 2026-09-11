@@ -11,6 +11,28 @@ source "$IMPL_RESOURCEPACK_ARTIFACTS_LIB_DIR/context.sh"
 # shellcheck source=guards.sh
 source "$IMPL_RESOURCEPACK_ARTIFACTS_LIB_DIR/guards.sh"
 
+# Replace runtime files by rename, never truncate a DLL/dylib mapped by a
+# running game. Existing processes retain their version until restart.
+copy_runtime_payload() {
+  local destination="$1"
+  local name temporary
+  local names=(ImplResourcePack.dll)
+  if is_macos; then
+    names+=(libImplTrackpad.dylib)
+  fi
+  for name in "${names[@]}"; do
+    require_file "$IMPL_RESOURCEPACK_BUILD_OUTPUT/$name"
+  done
+  for name in "${names[@]}"; do
+    temporary="$(mktemp "$destination/.$name.XXXXXX")"
+    if ! cp -p "$IMPL_RESOURCEPACK_BUILD_OUTPUT/$name" "$temporary"; then
+      rm -f "$temporary"
+      return 1
+    fi
+    mv -f "$temporary" "$destination/$name"
+  done
+}
+
 copy_core_payload() {
   local destination="$1"
 
@@ -29,7 +51,7 @@ copy_core_payload() {
   mkdir -p "$destination"
   cp "$IMPL_RESOURCEPACK_PROJECT_ROOT/ImplResourcePack/Info.json" "$destination/"
   cp "$IMPL_RESOURCEPACK_PROJECT_ROOT/ImplResourcePack/AdofaiIpcBootstrap.json" "$destination/"
-  cp "$IMPL_RESOURCEPACK_BUILD_OUTPUT/ImplResourcePack.dll" "$destination/"
+  copy_runtime_payload "$destination"
   cp "$IMPL_RESOURCEPACK_BOOTSTRAP_BUILD_OUTPUT/ImplResourcePack.Bootstrap.dll" "$destination/"
   cp "$ADOFAI_IPC_DEPENDENCY_SHIM_DLL" "$destination/"
   cp "$IMPL_RESOURCEPACK_PROJECT_ROOT/THIRD_PARTY_NOTICES.md" "$destination/"

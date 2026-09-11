@@ -160,4 +160,60 @@ describe('startKeyLimiterSync', () => {
 
     stop();
   });
+
+  it('keeps every numpad hand key when selecting each foot tab', () => {
+    const handKeys = [
+      'TAB',
+      '1',
+      '2',
+      'E',
+      'PAGE DOWN',
+      'J',
+      'NUMPAD DIVIDE',
+      'NUMPAD 9',
+      'A',
+      'LEFT SHIFT',
+      'C',
+      'SPACE',
+      'DOWN ARROW',
+      'UP ARROW',
+      'NUMPAD DELETE',
+      'NUMPAD 6',
+      'R',
+      'END',
+      'NUMPAD 7',
+      'W',
+    ];
+    const footMappings = {
+      eight: ['FORWARD SLASH', 'COMMA', 'M', 'N', 'B', 'SEMICOLON', 'Z', 'G'],
+      four: ['FORWARD SLASH', 'COMMA', 'B', 'SEMICOLON'],
+      two: ['FORWARD SLASH', 'SEMICOLON'],
+      none: [],
+    };
+    const coordinator = new KeyLimiterIpcCoordinator();
+    const enqueue = vi
+      .spyOn(coordinator, 'enqueue')
+      .mockImplementation(() => {});
+    useKeyStore.setState({
+      isBootstrapped: true,
+      selectedKeyType: 'numpad',
+      selectedViewerTabs: { hand: 'numpad', foot: 'none' },
+      keyMappings: { numpad: handKeys, ...footMappings },
+    });
+    const stop = startKeyLimiterSync(coordinator);
+    try {
+      for (const [foot, footKeys] of Object.entries(footMappings)) {
+        useKeyStore.setState({
+          selectedKeyType: foot,
+          selectedViewerTabs: { hand: 'numpad', foot },
+        });
+        expect(enqueue.mock.lastCall?.[0].keys).toEqual([
+          ...handKeys,
+          ...footKeys,
+        ]);
+      }
+    } finally {
+      stop();
+    }
+  });
 });

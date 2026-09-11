@@ -49,8 +49,7 @@ internal sealed class KeyLimiterService
 
           supported.Add(key);
           allowedKeys.Add(resolved.UnityKey);
-          if (resolved.HasAsyncKey)
-            allowedAsyncKeys.Add(resolved.AsyncKey);
+          DmNoteKeyMapper.AddAsyncKeys(resolved, allowedAsyncKeys);
         }
       }
 

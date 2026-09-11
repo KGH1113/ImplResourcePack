@@ -92,7 +92,14 @@ fn ensure_viewer_tabs(data: &mut AppStoreData) {
     let selected_hand = data
         .tabs
         .iter()
-        .find(|tab| tab.viewer_kind == KeyViewerKind::Hand && tab.id == data.selected_key_type)
+        .find(|tab| {
+            tab.viewer_kind == KeyViewerKind::Hand && tab.id == data.selected_viewer_tabs.hand
+        })
+        .or_else(|| {
+            data.tabs.iter().find(|tab| {
+                tab.viewer_kind == KeyViewerKind::Hand && tab.id == data.selected_key_type
+            })
+        })
         .or_else(|| {
             data.tabs
                 .iter()
@@ -625,6 +632,9 @@ pub(crate) fn normalize_state(mut data: AppStoreData) -> AppStoreData {
             tab.viewer_kind = KeyViewerKind::Hand;
         }
         data.selected_viewer_tabs = SelectedViewerTabs::default();
+        // The legacy editor selection becomes the initial hand selection only
+        // during migration. Later saves must preserve each viewer independently.
+        data.selected_viewer_tabs.hand = data.selected_key_type.clone();
         data.key_viewer_tabs_migrated = true;
     }
     ensure_viewer_tabs(&mut data);
@@ -962,7 +972,43 @@ struct LegacyOverlayPosition {
 #[cfg(test)]
 mod tests {
     use super::{migrate_legacy_ghost_keys, normalize_state, rgba_to_hex, LEGACY_BUILTIN_TAB_IDS};
-    use crate::models::{AppStoreData, KeyPosition, KeyPositions, KeyViewerKind};
+    use crate::models::{AppStoreData, KeyPosition, KeyPositions, KeyViewerKind, KeyViewerTab};
+
+    #[test]
+    fn legacy_editor_selection_becomes_the_hand_selection() {
+        let mut data = AppStoreData::default();
+        data.key_viewer_tabs_migrated = false;
+        data.selected_key_type = "numpad".into();
+        data.tabs = ["hand-default", "numpad"]
+            .into_iter()
+            .map(|id| KeyViewerTab {
+                id: id.into(),
+                name: id.into(),
+                viewer_kind: KeyViewerKind::Hand,
+            })
+            .collect();
+
+        let normalized = normalize_state(data);
+
+        assert_eq!(normalized.selected_viewer_tabs.hand, "numpad");
+        assert_eq!(normalized.selected_key_type, "numpad");
+        assert!(normalized.key_viewer_tabs_migrated);
+    }
+
+    #[test]
+    fn invalid_hand_selection_falls_back_without_changing_the_foot_selection() {
+        let mut data = AppStoreData::default();
+        data.key_viewer_tabs_migrated = true;
+        data.tabs = super::default_viewer_tabs("en");
+        data.selected_key_type = "foot-default".into();
+        data.selected_viewer_tabs.hand = "missing".into();
+
+        let normalized = normalize_state(data);
+
+        assert_eq!(normalized.selected_viewer_tabs.hand, "hand-default");
+        assert_eq!(normalized.selected_viewer_tabs.foot, "foot-default");
+        assert_eq!(normalized.selected_key_type, "foot-default");
+    }
 
     #[test]
     fn rgba_to_hex_converts_and_drops_alpha() {
