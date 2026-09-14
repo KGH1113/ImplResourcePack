@@ -56,10 +56,10 @@ internal static class DmNoteKeyMapper
     {
       if (
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-        && TryGetMacModifierAsyncKey(unityKey, out ushort modifierAsyncKey)
+        && TryGetMacAsyncKey(unityKey, out ushort macAsyncKey)
       )
       {
-        resolved = new ResolvedLimiterKey(unityKey, true, modifierAsyncKey);
+        resolved = new ResolvedLimiterKey(unityKey, true, macAsyncKey);
         return true;
       }
 
@@ -79,12 +79,17 @@ internal static class DmNoteKeyMapper
     return true;
   }
 
-  // SkyHook's macOS reverse mapper returns ushort.MaxValue for Shift and does
-  // not preserve the left/right distinction for Command. Its callback and
-  // RDInput AsyncKeyCode values use the USB HID modifier usages directly.
-  internal static bool TryGetMacModifierAsyncKey(KeyCode unityKey, out ushort asyncKey)
+  // SkyHook's macOS reverse mapper does not resolve Return, returns
+  // ushort.MaxValue for Shift, and does not preserve the left/right
+  // distinction for Command. Its callback and RDInput AsyncKeyCode values use
+  // USB HID usages directly.
+  internal static bool TryGetMacAsyncKey(KeyCode unityKey, out ushort asyncKey)
   {
-    if (unityKey == KeyCode.LeftControl)
+    if (unityKey == KeyCode.Return)
+      asyncKey = 0x28;
+    else if (unityKey == KeyCode.KeypadEnter)
+      asyncKey = 0x58;
+    else if (unityKey == KeyCode.LeftControl)
       asyncKey = 0xE0;
     else if (unityKey == KeyCode.LeftShift)
       asyncKey = 0xE1;

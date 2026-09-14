@@ -20,6 +20,7 @@ internal static class Program
       Run("normalizes DM Note names", NormalizeNames);
       Run("maps representative keyboard, mouse, and gamepad keys", MapsRepresentativeKeys);
       Run("maps macOS modifier async keys", MapsMacModifierAsyncKeys);
+      Run("maps Enter async keys", MapsEnterAsyncKeys);
       Run("allows ANSI and ISO backslash input", AllowsBackslashInput);
       Run("applies supported keys and reports unsupported keys", AppliesSupportedSubset);
       Run("handles duplicate and stale revisions", HandlesRevisionOrdering);
@@ -68,11 +69,17 @@ internal static class Program
     MacModifierMapsTo(KeyCode.RightAlt, 0xE6);
     MacModifierMapsTo(KeyCode.RightMeta, 0xE7);
     True(
-      !DmNoteKeyMapper.TryGetMacModifierAsyncKey(KeyCode.A, out _),
+      !DmNoteKeyMapper.TryGetMacAsyncKey(KeyCode.A, out _),
       "ordinary keys must not use the modifier fallback"
     );
     MapsAsyncTo("LEFT SHIFT", KeyCode.LeftShift, 0xE1);
     MapsAsyncTo("RIGHT SHIFT", KeyCode.RightShift, 0xE5);
+  }
+
+  private static void MapsEnterAsyncKeys()
+  {
+    MapsAsyncTo("RETURN", KeyCode.Return, 0x28);
+    MapsAsyncTo("NUMPAD RETURN", KeyCode.KeypadEnter, 0x58);
   }
 
   private static void AppliesSupportedSubset()
@@ -197,7 +204,7 @@ internal static class Program
   private static void MacModifierMapsTo(KeyCode key, ushort expected)
   {
     True(
-      DmNoteKeyMapper.TryGetMacModifierAsyncKey(key, out ushort actual),
+      DmNoteKeyMapper.TryGetMacAsyncKey(key, out ushort actual),
       key + " should have a macOS async fallback"
     );
     Equal(expected, actual);
